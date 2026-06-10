@@ -1,0 +1,7 @@
+@import 'tailwindcss';
+@source '../**/*.{js,ts,jsx,tsx}';
+@import 'tw-animate-css';
+
+/* 👇 LA MEJOR PRÁCTICA: Integrarlos directamente en la compilación de Tailwind */
+@import './theme.css';
+@import './globals.css';
