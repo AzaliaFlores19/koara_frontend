@@ -25,7 +25,7 @@ export function UserModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 sm:pt-16">
       <div 
         className="absolute inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade" 
         onClick={onClose}
