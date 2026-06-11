@@ -282,6 +282,7 @@ export default function ProductsPage() {
         isOpen={isModalOpen}
         mode={modalMode}
         formData={formData}
+        categories={categories}
         setFormData={setFormData}
         onClose={handleCloseModal}
         onSubmit={handleSubmit}
