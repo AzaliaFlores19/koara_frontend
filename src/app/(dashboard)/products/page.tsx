@@ -26,7 +26,7 @@ const INITIAL_PRODUCTS: Product[] = [
 ];
 
 const EMPTY_FORM: ProductFormData = {
-  name: "", code: "", description: "", price: "", stock: "", category: "",
+  name: "", code: "", description: "", price: "", stock: "", minStock: "", category: "",
 };
 
 const PRODUCTS_PER_PAGE = 8;
@@ -104,6 +104,7 @@ export default function ProductsPage() {
       description: product.description,
       price: product.price.toString(),
       stock: product.stock.toString(),
+      minStock: product.minStock?.toString() ?? "",
       category: product.category,
     });
     setSelectedId(product.id);
@@ -130,6 +131,7 @@ export default function ProductsPage() {
           description: formData.description,
           price: parseFloat(formData.price),
           stock: parseInt(formData.stock),
+          minStock: formData.minStock ? parseInt(formData.minStock) : undefined,
           category: formData.category,
           imageColor: CARD_COLORS[products.length % CARD_COLORS.length],
         };
@@ -145,6 +147,7 @@ export default function ProductsPage() {
                   description: formData.description,
                   price: parseFloat(formData.price),
                   stock: parseInt(formData.stock),
+                  minStock: formData.minStock ? parseInt(formData.minStock) : undefined,
                   category: formData.category,
                 }
               : p

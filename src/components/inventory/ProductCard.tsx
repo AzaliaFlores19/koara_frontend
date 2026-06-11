@@ -8,6 +8,7 @@ export interface Product {
   code: string;
   description: string;
   stock: number;
+  minStock?: number;
   price: number;
   category: string;
   imageColor: string;

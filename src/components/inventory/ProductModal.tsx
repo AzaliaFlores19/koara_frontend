@@ -8,6 +8,7 @@ export interface ProductFormData {
   description: string;
   price: string;
   stock: string;
+  minStock: string;
   category: string;
 }
 
@@ -107,6 +108,19 @@ export function ProductModal({
                 placeholder="0"
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-black uppercase tracking-wider">Min Stock</label>
+            <input
+              type="number"
+              required
+              min="0"
+              value={formData.minStock}
+              onChange={(e) => setFormData({ ...formData, minStock: e.target.value })}
+              className="koara-input-field"
+              placeholder="0"
+            />
           </div>
 
           <div className="space-y-1.5">
