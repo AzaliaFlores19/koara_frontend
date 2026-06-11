@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import koaraLogo from "@/imports/logo_insta_2.jpg";
-import { setAuth } from "@/lib/auth";         
-import { authApi } from "@/lib/api/auth";     
+import { setAuth } from "@/lib/auth";
+import { authApi } from "@/lib/api/auth";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 
 const C = {
@@ -45,7 +45,7 @@ export default function Login() {
       setAuth({
         name: user.name,
         email: user.email,
-        role: user.role, 
+        role: user.role,
       });
 
       router.push("/dashboard");
@@ -53,8 +53,8 @@ export default function Login() {
       //console.error("Login failure connection log:", err);
       // El condicional extrae de manera exacta los mensajes personalizados que inyectamos arriba
       setError(
-        err?.response?.data?.message || 
-        "Invalid email credentials or loss of system server communications."
+        err?.response?.data?.message ||
+          "Invalid email credentials or loss of system server communications.",
       );
     } finally {
       setLoading(false);
@@ -75,12 +75,16 @@ export default function Login() {
       style={{ backgroundColor: C.bg }}
     >
       <div className="w-full max-w-4xl bg-white rounded-[2rem] shadow-2xl overflow-hidden">
-        <div className="flex flex-col md:flex-row" style={{ minHeight: "620px" }}>
-          
+        <div
+          className="flex flex-col md:flex-row"
+          style={{ minHeight: "620px" }}
+        >
           {/* ── LEFT: Gradient panel ── */}
           <div
             className="hidden md:flex md:w-1/2 flex-col items-center justify-center p-12 relative text-white text-center overflow-hidden md:order-1"
-            style={{ background: `linear-gradient(135deg, ${C.dark}, ${C.primary}, ${C.bg})` }}
+            style={{
+              background: `linear-gradient(135deg, ${C.dark}, ${C.primary}, ${C.bg})`,
+            }}
           >
             {/* Wavy edge */}
             <svg
@@ -116,21 +120,27 @@ export default function Login() {
                 Koara
               </h2>
               <p className="text-sm text-white/90 leading-relaxed font-medium">
-                Your premium skincare management solution. Streamline your business with elegant tools designed for success.
+                Your premium skincare management solution. Streamline your
+                business with elegant tools designed for success.
               </p>
             </div>
           </div>
 
           {/* ── RIGHT: Form ── */}
           <div className="w-full md:w-1/2 p-8 sm:p-12 flex flex-col justify-center bg-white md:order-2">
-            
             {/* Mobile logo layout */}
             <div className="md:hidden flex justify-center mb-6">
               <div
                 className="w-20 h-20 rounded-full overflow-hidden shadow-lg"
                 style={{ border: `3px solid ${C.primary}` }}
               >
-                <Image src={koaraLogo} alt="Koara" width={80} height={80} className="w-full h-full object-cover" />
+                <Image
+                  src={koaraLogo}
+                  alt="Koara"
+                  width={80}
+                  height={80}
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
 
@@ -211,7 +221,9 @@ export default function Login() {
                   type="submit"
                   disabled={loading}
                   className="w-full py-3 px-4 rounded-xl text-white text-sm transition-all hover:shadow-md hover:opacity-95 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 font-semibold"
-                  style={{ background: `linear-gradient(to right, ${C.primary}, ${C.dark})` }}
+                  style={{
+                    background: `linear-gradient(to right, ${C.primary}, ${C.dark})`,
+                  }}
                 >
                   {loading ? (
                     <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

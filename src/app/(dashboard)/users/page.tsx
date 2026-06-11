@@ -142,7 +142,6 @@ export default function UsersPage() {
     },
     {
       header: "Actions",
-      align: "right" as const,
       render: (user: User, { openConfirm }: any) => (
         <div className="flex items-center justify-end gap-2">
           <button

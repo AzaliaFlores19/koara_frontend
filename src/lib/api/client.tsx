@@ -182,6 +182,60 @@ if (url.includes("auth/forgot-password")) {
       });
     }
 
+    // 4. Simular Audit Logs
+    if (url === "audit-logs") {
+      config.adapter = async () => ({
+        data: [
+          { id: "1", user: "Admin", entity: "PRODUCTS", action: "UPDATE", reference: "Crema", date: "11/05" },
+          { id: "2", user: "Ana", entity: "CLIENTS", action: "CREATE", reference: "LUIS", date: "11/05" },
+          { id: "3", user: "Admin", entity: "CAI_RANGE", action: "DEACTIVATE", reference: "c91d...", date: "10/05" },
+          { id: "4", user: "Carlos", entity: "USERS", action: "CREATE", reference: "Juan Perez", date: "10/05" },
+          { id: "5", user: "Admin", entity: "PRODUCTS", action: "DELETE", reference: "Shampoo", date: "09/05" },
+          { id: "6", user: "Maria", entity: "INVOICES", action: "CREATE", reference: "INV-001", date: "09/05" },
+          { id: "7", user: "Admin", entity: "CAI_RANGE", action: "CREATE", reference: "A1B2C3...", date: "08/05" },
+          { id: "8", user: "Ana", entity: "CLIENTS", action: "UPDATE", reference: "Maria Lopez", date: "08/05" },
+          { id: "9", user: "Carlos", entity: "USERS", action: "DELETE", reference: "Pedro Garcia", date: "07/05" },
+          { id: "10", user: "Admin", entity: "PRODUCTS", action: "CREATE", reference: "Gel", date: "07/05" },
+        ],
+        status: 200,
+        statusText: "OK",
+        headers: config.headers,
+        config,
+      });
+    }
+
+  
+
+// ... inside the dashboard/metrics interceptor conditional ...
+if (url.includes("dashboard/metrics")) {
+  config.adapter = async () => ({
+    data: {
+      totalProducts: 128,
+      totalClients: 342,
+      totalCategories: 16,
+      lowStockProducts: [
+        { name: "TOCOBO Vita Glaze Lip Mask", stock: 3 },
+        { name: "Beauty of Joseon Sunscreen", stock: 2 },
+        { name: "Anua Heartleaf Toner", stock: 5 }
+      ],
+      bestSellingProducts: [
+        { name: "Watermelon Glow Serum", sales: 142, price: "$24.00", image: img9.src, code: "KO-WAT-01" },
+        { name: "Centella Ampoule", sales: 98, price: "$18.50", image: img12.src, code: "KO-CEN-05" },
+        { name: "Collagen Cream", sales: 75, price: "$30.00", image: img1.src, code: "KO-COL-03" },
+        { name: "Green Tea Cleanser", sales: 60, price: "$22.00", image: img10.src, code: "KO-GRE-02" },
+        { name: "Vita Glaze Mask Pack", sales: 45, price: "$15.00", image: img9.src, code: "KO-WAT-02" },
+        { name: "Hyaluronic Acid Sun Gel", sales: 39, price: "$19.00", image: img12.src, code: "KO-CEN-05" }
+      ],
+      todaySales: { current: "$1,240.00", yesterday: "$980.00", thisMonth: "$24,500.00" },
+      invoices: { emitted: 48, paid: 42 }
+    },
+    status: 200,
+    statusText: "OK",
+    headers: config.headers,
+    config,
+  });
+}
+
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("koara_token");
       if (token) config.headers.Authorization = `Bearer ${token}`;
