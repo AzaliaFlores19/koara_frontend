@@ -99,7 +99,7 @@ export default function ProductsPage() {
                 placeholder="Search Product"
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white rounded-full text-sm border border-black/10 focus:outline-none focus:ring-2 focus:ring-koara-primary placeholder:text-gray-400"
+                className="w-full pl-10 pr-4 py-2.5 bg-white rounded-full text-sm border border-black focus:outline-none focus:ring-2 focus:ring-koara-primary placeholder:text-gray-400"
               />
             </div>
 

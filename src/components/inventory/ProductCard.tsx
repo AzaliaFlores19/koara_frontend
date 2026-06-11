@@ -29,9 +29,9 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
         <Package size={32} className="text-black/20" />
       </div>
 
-      <div className="p-3 flex flex-col gap-0.5 flex-1">
-        <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">{product.code}</p>
-        <h3 className="font-semibold text-sm text-black leading-tight">{product.name}</h3>
+      <div className="px-3 pb-3 pt-1.5 flex flex-col gap-0.5 flex-1">
+        <p className="text-xs text-black font-bold uppercase tracking-wide">{product.code}</p>
+        <h3 className="font-semibold text-sm text-black leading-tight mt-2">{product.name}</h3>
         <p className="text-xs text-gray-500 leading-snug line-clamp-2">{product.description}</p>
         <p className="text-xs text-gray-500 mt-1">Stock: {product.stock}</p>
         <p className="font-semibold text-sm text-black">${product.price.toFixed(2)}</p>
