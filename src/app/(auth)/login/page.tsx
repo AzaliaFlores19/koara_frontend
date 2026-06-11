@@ -31,13 +31,17 @@ export default function Login() {
     setError(null);
 
     try {
-      // 1. Fire the Axios POST request through your unified client wrapper
+      // 1. Ejecuta la petición Axios procesada por nuestro interceptor simulado
       const response = await authApi.login(formData.email, formData.password);
+      
+      const { user, token } = response; 
 
-      // 2. Extract the returned data object matching your user type structure
-      const { user } = response;
+      // Guardar opcionalmente el token devuelto en localStorage si tu flujo lo requiere
+      if (typeof window !== "undefined" && token) {
+        localStorage.setItem("koara_token", token);
+      }
 
-      // 3. Persist user properties safely to browser memory under 'koara_auth'
+      // 2. Persistir las propiedades del usuario autenticado
       setAuth({
         name: user.name,
         email: user.email,
@@ -46,7 +50,8 @@ export default function Login() {
 
       router.push("/dashboard");
     } catch (err: any) {
-      console.error("Login failure connection log:", err);
+      //console.error("Login failure connection log:", err);
+      // El condicional extrae de manera exacta los mensajes personalizados que inyectamos arriba
       setError(
         err?.response?.data?.message ||
           "Invalid email credentials or loss of system server communications.",
@@ -167,7 +172,7 @@ export default function Login() {
                   value={formData.email}
                   onChange={handleChange}
                   className={inputCls}
-                  placeholder="name@example.com"
+                  placeholder="admin@koara.com"
                   disabled={loading}
                   required
                 />

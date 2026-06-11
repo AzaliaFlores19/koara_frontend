@@ -223,39 +223,57 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* ── FOOTER ── */}
-        <footer className="mt-auto w-full bg-[#d99ebd]">
-          <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 gap-6 text-center sm:grid-cols-3 sm:text-left">
-              <div>
-                <h3 className="mb-3 font-semibold text-foreground">Contact Us</h3>
-                <a href="mailto:info@koara.com" className="flex items-center justify-center gap-2 text-sm text-foreground hover:opacity-70 sm:justify-start">
-                  <Mail size={16} /> info@koara.com
-                </a>
-              </div>
-              <div>
-                <h3 className="mb-3 font-semibold text-foreground">Follow Us</h3>
-                <a href="https://instagram.com/koara" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 text-sm text-foreground hover:opacity-70 sm:justify-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-                  </svg>{" "}
-                  @koara
-                </a>
-              </div>
-              <div>
-                <h3 className="mb-3 font-semibold text-foreground">Catalog</h3>
-                <a href="/catalog" className="flex items-center justify-center gap-2 text-sm text-foreground hover:opacity-70 sm:justify-start">
-                  <BookOpen size={16} /> View Our Catalog
-                </a>
-              </div>
-            </div>
-            <div className="mt-6 border-t border-black/15 pt-6 text-center text-xs text-foreground/60">
-              © 2026 Koara. All rights reserved.
-            </div>
-          </div>
-        </footer>
+      {/* ── FOOTER ── */}
+<footer className="mt-auto w-full bg-[#d99ebd]">
+  <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="grid grid-cols-1 gap-6 text-center sm:grid-cols-3 sm:text-left">
+      
+      {/* Contacto: Ahora es solo texto plano, no un enlace */}
+      <div>
+        <h3 className="mb-3 font-semibold text-foreground">Contact Us</h3>
+        <div className="flex items-center justify-center gap-2 text-sm text-foreground sm:justify-start">
+          <Mail size={16} /> <span>info@koara.com</span>
+        </div>
+      </div>
+
+      {/* Instagram: Enlace actualizado con tu link de perfil */}
+      <div>
+        <h3 className="mb-3 font-semibold text-foreground">Follow Us</h3>
+        <a 
+          href="https://www.instagram.com/koara.kr?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="flex items-center justify-center gap-2 text-sm text-foreground hover:opacity-70 sm:justify-start"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+            <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+          </svg>{" "}
+          @koara.kr
+        </a>
+      </div>
+
+      {/* Catálogo: Enlace directo al visor Heyzine optimizado */}
+      <div>
+        <h3 className="mb-3 font-semibold text-foreground">Catalog</h3>
+        <a 
+          href="https://heyzine.com/flip-book/2536f2e2a8.html" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="flex items-center justify-center gap-2 text-sm text-foreground hover:opacity-70 sm:justify-start"
+        >
+          <BookOpen size={16} /> View Our Catalog
+        </a>
+      </div>
+
+    </div>
+    
+    <div className="mt-6 border-t border-black/15 pt-6 text-center text-xs text-foreground/60">
+      © 2026 Koara. All rights reserved.
+    </div>
+  </div>
+</footer>
 
       </div>
     </DashboardLayout>

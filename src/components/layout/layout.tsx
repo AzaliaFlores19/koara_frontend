@@ -1,4 +1,3 @@
-
 "use client"; 
 
 import { useState, useEffect, type ReactNode } from "react";
@@ -19,8 +18,8 @@ const allNavItems = [
   { name: "Clients", path: "/clients", icon: Users, adminOnly: false },
   { name: "Invoice", path: "/invoices", icon: FileText, adminOnly: false },
   { name: "CAI Management", path: "/cai-management", icon: Bot, adminOnly: true },
-  { name: "Reports", path: "/reports", icon: BarChart, adminOnly: false },
-  { name: "Audit Logs", path: "/audit-logs", icon: ClipboardList, adminOnly: false },
+  { name: "Reports", path: "/reports", icon: BarChart, adminOnly: true },      
+  { name: "Audit Logs", path: "/audit-logs", icon: ClipboardList, adminOnly: true },
   { name: "Branding", path: "/branding", icon: Package, adminOnly: true },
 ];
 

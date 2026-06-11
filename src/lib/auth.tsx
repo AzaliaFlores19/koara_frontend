@@ -1,4 +1,4 @@
-export type UserRole = "Admin" | "Employee";
+export type UserRole = "Admin" | "Employee" | "ADMIN" | "EMPLOYEE";
 
 export interface AuthUser {
   name: string;
@@ -32,7 +32,8 @@ export function clearAuth() {
 }
 
 export function isAdmin(): boolean {
-  return getAuth()?.role === "Admin";
+  const role = getAuth()?.role;
+  return role === "Admin" || role === "ADMIN";
 }
 
 export function roleFromEmail(email: string): UserRole {
