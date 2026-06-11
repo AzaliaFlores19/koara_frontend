@@ -41,6 +41,8 @@ export function Table<T extends { id: string | number }>({
   const prevLengthRef = useRef(data.length);
   const hasJustDeleted = useRef(false);
   const prevDataMapRef = useRef<Map<string | number, T>>(new Map());
+  const seenIdsRef = useRef<Set<string | number>>(new Set());
+  const isInitialMount = useRef(true);
 
   const totalPages = Math.ceil(data.length / itemsPerPage);
 
@@ -57,12 +59,33 @@ export function Table<T extends { id: string | number }>({
   }, [data.length, totalPages, currentPage]);
 
   useEffect(() => {
-    const hasEdit = data.some((item) => {
+    if (isInitialMount.current) {
+      data.forEach((item) => seenIdsRef.current.add(item.id));
+      const initialMap = new Map<string | number, T>();
+      data.forEach((item) => initialMap.set(item.id, item));
+      prevDataMapRef.current = initialMap;
+      isInitialMount.current = false;
+      return;
+    }
+
+    let hasAddition = false;
+    let hasEdit = false;
+
+    data.forEach((item) => {
+      if (!seenIdsRef.current.has(item.id)) {
+        hasAddition = true;
+        seenIdsRef.current.add(item.id);
+      }
+
       const prevItem = prevDataMapRef.current.get(item.id);
-      return prevItem && prevItem !== item;
+      if (prevItem && prevItem !== item) {
+        hasEdit = true;
+      }
     });
 
-    if (hasEdit) {
+    if (hasAddition) {
+      setToastMessage("Se ha añadido de manera exitosa!");
+    } else if (hasEdit) {
       setToastMessage("Se ha editado de manera exitosa!");
     }
 
