@@ -31,7 +31,7 @@ export function Table<T extends { id: string | number }>({
   itemsPerPage = 7,
 }: TableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [confirmData, setConfirmData] = useState<{
     title: string;
     message: string;
@@ -39,22 +39,46 @@ export function Table<T extends { id: string | number }>({
   } | null>(null);
 
   const prevLengthRef = useRef(data.length);
+  const hasJustDeleted = useRef(false);
+  const prevDataMapRef = useRef<Map<string | number, T>>(new Map());
 
   const totalPages = Math.ceil(data.length / itemsPerPage);
 
   useEffect(() => {
-    if (data.length < prevLengthRef.current) {
-      setShowToast(true);
-      const timer = setTimeout(() => setShowToast(false), 3000);
-      prevLengthRef.current = data.length;
-      return () => clearTimeout(timer);
+    if (hasJustDeleted.current && data.length < prevLengthRef.current) {
+      setToastMessage("Se ha eliminado de manera exitosa!");
     }
+    hasJustDeleted.current = false;
     prevLengthRef.current = data.length;
 
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(1);
     }
   }, [data.length, totalPages, currentPage]);
+
+  useEffect(() => {
+    const hasEdit = data.some((item) => {
+      const prevItem = prevDataMapRef.current.get(item.id);
+      return prevItem && prevItem !== item;
+    });
+
+    if (hasEdit) {
+      setToastMessage("Se ha editado de manera exitosa!");
+    }
+
+    const newMap = new Map<string | number, T>();
+    data.forEach((item) => {
+      newMap.set(item.id, item);
+    });
+    prevDataMapRef.current = newMap;
+  }, [data]);
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedData = data.slice(startIndex, startIndex + itemsPerPage);
@@ -75,7 +99,7 @@ export function Table<T extends { id: string | number }>({
 
   return (
     <div className="space-y-10 animate-koara-fade relative">
-      {showToast &&
+      {toastMessage &&
         createPortal(
           <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-koara-modal">
             <div className="bg-gradient-to-br from-white to-[#F6DEEB] border-2 border-slate-200 rounded-2xl px-6 py-3 shadow-xl flex items-center gap-3">
@@ -83,7 +107,7 @@ export function Table<T extends { id: string | number }>({
                 <CheckCircle2 size={18} />
               </div>
               <span className="font-bold text-xs text-black tracking-tight uppercase">
-                Se ha eliminado de manera exitosa!
+                {toastMessage}
               </span>
             </div>
           </div>,
@@ -94,6 +118,7 @@ export function Table<T extends { id: string | number }>({
         isOpen={!!confirmData}
         message={confirmData?.message || ""}
         onConfirm={() => {
+          hasJustDeleted.current = true;
           confirmData?.onConfirm();
           setConfirmData(null);
         }}
