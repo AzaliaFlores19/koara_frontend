@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Search, Plus, ChevronDown } from "lucide-react";
+import { Search, Plus, ChevronDown, CheckCircle } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
 import ProductCard, { type Product } from "@/components/inventory/ProductCard";
 import Pagination from "@/components/inventory/Pagination";
@@ -38,6 +38,13 @@ export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Toast
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -136,6 +143,7 @@ export default function ProductsPage() {
           imageColor: CARD_COLORS[products.length % CARD_COLORS.length],
         };
         setProducts((prev) => [...prev, newProduct]);
+        showToast("Product added successfully.");
       } else if (selectedId) {
         setProducts((prev) =>
           prev.map((p) =>
@@ -153,6 +161,7 @@ export default function ProductsPage() {
               : p
           )
         );
+        showToast("Product edited successfully.");
       }
 
       handleCloseModal();
@@ -169,6 +178,7 @@ export default function ProductsPage() {
       onConfirm: () => {
         setProducts((prev) => prev.filter((p) => p.id !== product.id));
         setConfirmData(null);
+        showToast("Product deleted successfully.");
       },
     });
   };
@@ -284,6 +294,13 @@ export default function ProductsPage() {
         onConfirm={() => confirmData?.onConfirm()}
         onCancel={() => setConfirmData(null)}
       />
+
+      {toast && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-3 bg-green-600 text-white rounded-2xl px-7 py-4 shadow-xl text-base font-medium">
+          <CheckCircle size={22} className="text-white shrink-0" />
+          {toast}
+        </div>
+      )}
     </DashboardLayout>
   );
 }
