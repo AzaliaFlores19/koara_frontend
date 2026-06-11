@@ -62,6 +62,28 @@ apiClient.interceptors.request.use(
       });
     }
 
+    // 4. Simular Audit Logs
+    if (url === "audit-logs") {
+      config.adapter = async () => ({
+        data: [
+          { id: "1", user: "Admin", entity: "PRODUCTS", action: "UPDATE", reference: "Crema", date: "11/05" },
+          { id: "2", user: "Ana", entity: "CLIENTS", action: "CREATE", reference: "LUIS", date: "11/05" },
+          { id: "3", user: "Admin", entity: "CAI_RANGE", action: "DEACTIVATE", reference: "c91d...", date: "10/05" },
+          { id: "4", user: "Carlos", entity: "USERS", action: "CREATE", reference: "Juan Perez", date: "10/05" },
+          { id: "5", user: "Admin", entity: "PRODUCTS", action: "DELETE", reference: "Shampoo", date: "09/05" },
+          { id: "6", user: "Maria", entity: "INVOICES", action: "CREATE", reference: "INV-001", date: "09/05" },
+          { id: "7", user: "Admin", entity: "CAI_RANGE", action: "CREATE", reference: "A1B2C3...", date: "08/05" },
+          { id: "8", user: "Ana", entity: "CLIENTS", action: "UPDATE", reference: "Maria Lopez", date: "08/05" },
+          { id: "9", user: "Carlos", entity: "USERS", action: "DELETE", reference: "Pedro Garcia", date: "07/05" },
+          { id: "10", user: "Admin", entity: "PRODUCTS", action: "CREATE", reference: "Gel", date: "07/05" },
+        ],
+        status: 200,
+        statusText: "OK",
+        headers: config.headers,
+        config,
+      });
+    }
+
   
 
 // ... inside the dashboard/metrics interceptor conditional ...
