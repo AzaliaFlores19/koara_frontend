@@ -42,6 +42,26 @@ apiClient.interceptors.request.use(
       });
     }
 
+    // 3. Simular Usuarios
+    if (url === "users" || url.includes("users")) {
+      config.adapter = async () => ({
+        data: [
+          { id: "1", name: "Admin User", email: "admin@koara.com", role: "Admin" },
+          { id: "2", name: "Store Manager", email: "manager@koara.com", role: "Admin" },
+          { id: "3", name: "Sales Rep", email: "sales@koara.com", role: "Employee" },
+          { id: "4", name: "Support Staff", email: "support@koara.com", role: "Employee" },
+          { id: "5", name: "Sales Rep", email: "sales2@koara.com", role: "Employee" },
+          { id: "6", name: "Admin User", email: "admin2@koara.com", role: "Admin" },
+          { id: "7", name: "Admin User", email: "admin3@koara.com", role: "Admin" },
+          { id: "8", name: "Admin User", email: "admin4@koara.com", role: "Admin" },
+        ],
+        status: 200,
+        statusText: "OK",
+        headers: config.headers,
+        config,
+      });
+    }
+
   
 
 // ... inside the dashboard/metrics interceptor conditional ...

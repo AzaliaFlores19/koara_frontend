@@ -4,4 +4,4 @@
 
 /* 👇 LA MEJOR PRÁCTICA: Integrarlos directamente en la compilación de Tailwind */
 @import './theme.css';
-@import './globals.css';
+@import './koara.css';
