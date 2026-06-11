@@ -1,0 +1,75 @@
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.koara-card {
+  @apply bg-white rounded-[2rem] border-2 border-slate-900 overflow-hidden shadow-sm;
+}
+
+.koara-modal-card {
+  @apply relative w-full max-w-md bg-gradient-to-br from-white to-[#F6DEEB] rounded-[2rem] border-2 border-slate-900 p-8 shadow-2xl overflow-hidden;
+}
+
+.koara-input {
+  @apply w-full px-4 py-2.5 rounded-full border-1 border-slate-300 focus:outline-none bg-white text-sm transition-all;
+}
+
+.koara-input-field {
+  @apply w-full px-4 py-3 rounded-xl border-2 border-slate-900 focus:outline-none bg-white text-sm transition-all;
+}
+
+.koara-btn-black {
+  @apply flex items-center gap-2 bg-black text-white px-6 py-2.5 rounded-full font-bold text-sm hover:opacity-90 transition-all active:scale-[0.98];
+}
+
+.koara-btn-pink {
+  @apply flex-1 py-3 px-4 rounded-2xl text-white text-sm font-bold bg-[#F4B8D4] hover:opacity-95 transition-all shadow-md flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50;
+}
+
+.koara-btn-cancel {
+  @apply flex-1 py-3 px-4 rounded-2xl text-[#D99EBD] text-sm font-bold bg-[#F4B8D4]/20 hover:bg-[#F4B8D4]/30 transition-all border-2 border-transparent active:scale-[0.98];
+}
+
+.koara-icon-btn {
+  @apply w-8 h-8 rounded-full border-2 border-slate-900 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-900 active:scale-[0.95];
+}
+
+.k-badge-admin {
+  @apply inline-block px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#E9D5FF] text-[#7C3AED];
+}
+
+.k-badge-employee {
+  @apply inline-block px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#DCFCE7] text-[#16A34A];
+}
+
+.koara-pagination-btn {
+  @apply w-10 h-10 rounded-full border-2 border-slate-900 flex items-center justify-center hover:bg-slate-100 transition-colors font-bold text-sm active:scale-[0.95] disabled:opacity-30;
+}
+
+.koara-pagination-btn-active {
+  @apply w-10 h-10 rounded-full border-2 border-slate-900 flex items-center justify-center transition-colors font-bold text-sm active:scale-[0.95] disabled:opacity-30 bg-[#f4b8d4] hover:bg-[#f4b8d4];
+}
+
+/* Animations */
+@keyframes koara-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes koara-modal-enter {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px) scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+.animate-koara-fade {
+  animation: koara-fade-in 0.3s ease-out forwards;
+}
+
+.animate-koara-modal {
+  animation: koara-modal-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

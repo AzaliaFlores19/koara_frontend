@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Search, Plus, ChevronDown } from "lucide-react";
+import { Search, Plus, ChevronDown, CheckCircle } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
 import ProductCard, { type Product } from "@/components/inventory/ProductCard";
 import Pagination from "@/components/inventory/Pagination";
@@ -10,10 +10,12 @@ import {
   CategoryFormModal,
   ConfirmDeleteModal,
 } from "@/components/inventory/CategoryModals";
+import { ProductModal, type ProductFormData } from "@/components/inventory/ProductModal";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 const CARD_COLORS = ["#F5EDE8", "#F9D5E0", "#E8E8EC", "#EDF5EE"];
 
-const MOCK_PRODUCTS: Product[] = [
+const INITIAL_PRODUCTS: Product[] = [
   { id: "1",  name: "Clean Mist",     code: "CM001", description: "Bruma suave para refrescar la piel.",      stock: 8,  price: 19.00, category: "Mist",     imageColor: CARD_COLORS[0] },
   { id: "2",  name: "Serum Balance",  code: "SB001", description: "Suero facial de absorción rápida.",        stock: 12, price: 28.00, category: "Serum",    imageColor: CARD_COLORS[1] },
   { id: "3",  name: "Velvet Cream",   code: "VC001", description: "Crema nutritiva premium.",                 stock: 2,  price: 35.00, category: "Cream",    imageColor: CARD_COLORS[2] },
@@ -28,9 +30,14 @@ const MOCK_PRODUCTS: Product[] = [
   { id: "12", name: "Calm Mist",      code: "CM002", description: "Calma y refresca pieles sensibles.",      stock: 11, price: 20.00, category: "Mist",     imageColor: CARD_COLORS[3] },
 ];
 
+const EMPTY_FORM: ProductFormData = {
+  name: "", code: "", description: "", price: "", stock: "", minStock: "", category: "",
+};
+
 const PRODUCTS_PER_PAGE = 8;
 
 export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,6 +52,22 @@ export default function ProductsPage() {
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
+  // Toast
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [formData, setFormData] = useState<ProductFormData>(EMPTY_FORM);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Confirm delete state
+  const [confirmData, setConfirmData] = useState<{ message: string; onConfirm: () => void } | null>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -56,13 +79,18 @@ export default function ProductsPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const categories = useMemo(() => {
+    const cats = new Set(products.map((p) => p.category));
+    return Array.from(cats).sort();
+  }, [products]);
+
   const filtered = useMemo(() => {
-    return MOCK_PRODUCTS.filter((p) => {
+    return products.filter((p) => {
       const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
       const matchesCategory = !activeCategory || p.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [search, activeCategory]);
+  }, [products, search, activeCategory]);
 
   const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
   const paginated = filtered.slice(
@@ -104,6 +132,92 @@ export default function ProductsPage() {
     if (activeCategory === deletingCategory) setActiveCategory(null);
     setDeletingCategory(null);
     setShowManageCategories(true);
+  // Modal handlers
+  const handleOpenAddModal = () => {
+    setModalMode("add");
+    setFormData(EMPTY_FORM);
+    setSelectedId(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (product: Product) => {
+    setModalMode("edit");
+    setFormData({
+      name: product.name,
+      code: product.code,
+      description: product.description,
+      price: product.price.toString(),
+      stock: product.stock.toString(),
+      minStock: product.minStock?.toString() ?? "",
+      category: product.category,
+    });
+    setSelectedId(product.id);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setFormData(EMPTY_FORM);
+    setSelectedId(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      if (modalMode === "add") {
+        const newProduct: Product = {
+          id: (Math.max(...products.map((p) => parseInt(p.id)), 0) + 1).toString(),
+          name: formData.name,
+          code: formData.code,
+          description: formData.description,
+          price: parseFloat(formData.price),
+          stock: parseInt(formData.stock),
+          minStock: formData.minStock ? parseInt(formData.minStock) : undefined,
+          category: formData.category,
+          imageColor: CARD_COLORS[products.length % CARD_COLORS.length],
+        };
+        setProducts((prev) => [...prev, newProduct]);
+        showToast("Product added successfully.");
+      } else if (selectedId) {
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === selectedId
+              ? {
+                  ...p,
+                  name: formData.name,
+                  code: formData.code,
+                  description: formData.description,
+                  price: parseFloat(formData.price),
+                  stock: parseInt(formData.stock),
+                  minStock: formData.minStock ? parseInt(formData.minStock) : undefined,
+                  category: formData.category,
+                }
+              : p
+          )
+        );
+        showToast("Product edited successfully.");
+      }
+
+      handleCloseModal();
+    } catch {
+      alert("Error al guardar el producto.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = (product: Product) => {
+    setConfirmData({
+      message: `Are you sure you want to delete "${product.name}"? This action cannot be undone.`,
+      onConfirm: () => {
+        setProducts((prev) => prev.filter((p) => p.id !== product.id));
+        setConfirmData(null);
+        showToast("Product deleted successfully.");
+      },
+    });
   };
 
   return (
@@ -115,7 +229,7 @@ export default function ProductsPage() {
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold">Product List</h1>
             <div className="flex items-center gap-2">
-              <button className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors">
+              <button onClick={handleOpenAddModal} className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors">
                 <Plus size={15} />
                 Add Product
               </button>
@@ -183,8 +297,8 @@ export default function ProductsPage() {
                 <ProductCard
                   key={product.id}
                   product={product}
-                  onEdit={() => {}}
-                  onDelete={() => {}}
+                  onEdit={handleOpenEditModal}
+                  onDelete={handleDelete}
                 />
               ))}
             </div>
@@ -240,6 +354,29 @@ export default function ProductsPage() {
           onClose={() => { setDeletingCategory(null); setShowManageCategories(true); }}
           onConfirm={handleDeleteCategory}
         />
+      <ProductModal
+        isOpen={isModalOpen}
+        mode={modalMode}
+        formData={formData}
+        categories={categories}
+        setFormData={setFormData}
+        onClose={handleCloseModal}
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+      />
+
+      <ConfirmModal
+        isOpen={!!confirmData}
+        message={confirmData?.message ?? ""}
+        onConfirm={() => confirmData?.onConfirm()}
+        onCancel={() => setConfirmData(null)}
+      />
+
+      {toast && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-3 bg-green-600 text-white rounded-2xl px-7 py-4 shadow-xl text-base font-medium">
+          <CheckCircle size={22} className="text-white shrink-0" />
+          {toast}
+        </div>
       )}
     </DashboardLayout>
   );
