@@ -46,12 +46,13 @@ export default function ProductsPage() {
 
   // Category management state
   const [categories, setCategories] = useState<string[]>(() =>
-    Array.from(new Set(MOCK_PRODUCTS.map((p) => p.category))).sort()
+    Array.from(new Set(INITIAL_PRODUCTS.map((p) => p.category))).sort()
   );
   const [showManageCategories, setShowManageCategories] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
+
   // Toast
   const [toast, setToast] = useState<string | null>(null);
   const showToast = (msg: string) => {
@@ -59,7 +60,7 @@ export default function ProductsPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Modal state
+  // Product modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [formData, setFormData] = useState<ProductFormData>(EMPTY_FORM);
@@ -78,11 +79,6 @@ export default function ProductsPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const categories = useMemo(() => {
-    const cats = new Set(products.map((p) => p.category));
-    return Array.from(cats).sort();
-  }, [products]);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -108,6 +104,7 @@ export default function ProductsPage() {
     setCurrentPage(1);
   };
 
+  // Category handlers
   const handleAddCategory = (name: string) => {
     if (!categories.includes(name)) {
       setCategories((prev) => [...prev, name].sort());
@@ -132,7 +129,9 @@ export default function ProductsPage() {
     if (activeCategory === deletingCategory) setActiveCategory(null);
     setDeletingCategory(null);
     setShowManageCategories(true);
-  // Modal handlers
+  };
+
+  // Product modal handlers
   const handleOpenAddModal = () => {
     setModalMode("add");
     setFormData(EMPTY_FORM);
@@ -203,7 +202,7 @@ export default function ProductsPage() {
 
       handleCloseModal();
     } catch {
-      alert("Error al guardar el producto.");
+      alert("Error saving product.");
     } finally {
       setIsSubmitting(false);
     }
@@ -318,7 +317,6 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Manage Categories modal */}
       {showManageCategories && (
         <ManageCategoriesModal
           categories={categories}
@@ -329,7 +327,6 @@ export default function ProductsPage() {
         />
       )}
 
-      {/* Add Category modal */}
       {showAddCategory && (
         <CategoryFormModal
           mode="add"
@@ -338,7 +335,6 @@ export default function ProductsPage() {
         />
       )}
 
-      {/* Edit Category modal */}
       {editingCategory && (
         <CategoryFormModal
           mode="edit"
@@ -348,12 +344,13 @@ export default function ProductsPage() {
         />
       )}
 
-      {/* Delete Category confirmation */}
       {deletingCategory && (
         <ConfirmDeleteModal
           onClose={() => { setDeletingCategory(null); setShowManageCategories(true); }}
           onConfirm={handleDeleteCategory}
         />
+      )}
+
       <ProductModal
         isOpen={isModalOpen}
         mode={modalMode}
