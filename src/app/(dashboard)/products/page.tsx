@@ -111,6 +111,7 @@ export default function ProductsPage() {
     }
     setShowAddCategory(false);
     setShowManageCategories(true);
+    showToast("Category added successfully.");
   };
 
   const handleEditCategory = (newName: string) => {
@@ -121,6 +122,7 @@ export default function ProductsPage() {
     if (activeCategory === editingCategory) setActiveCategory(newName);
     setEditingCategory(null);
     setShowManageCategories(true);
+    showToast("Category updated successfully.");
   };
 
   const handleDeleteCategory = () => {
@@ -129,6 +131,7 @@ export default function ProductsPage() {
     if (activeCategory === deletingCategory) setActiveCategory(null);
     setDeletingCategory(null);
     setShowManageCategories(true);
+    showToast("Category deleted successfully.");
   };
 
   // Product modal handlers
