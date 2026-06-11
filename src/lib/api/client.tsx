@@ -121,6 +121,26 @@ if (url.includes("auth/profile")) {
   };
 }
 
+if (url.includes("auth/forgot-password")) {
+      config.adapter = async () => {
+        let requestBody = { email: "" };
+        try {
+          if (typeof config.data === "string") requestBody = JSON.parse(config.data);
+          else if (config.data) requestBody = config.data;
+        } catch (e) {}
+
+        console.log("Simulando envío de recuperación para:", requestBody.email);
+
+        return {
+          data: { message: "Recovery link dispatched successfully." },
+          status: 200,
+          statusText: "OK",
+          headers: config.headers,
+          config,
+        };
+      };
+    }
+
     // 3. Simular Endpoint de Usuarios (Mapeado sin contraseñas por seguridad)
     if (url === "users" || url.includes("users")) {
       config.adapter = async () => ({
