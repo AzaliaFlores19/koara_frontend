@@ -5,6 +5,11 @@ import { Search, Plus, ChevronDown, CheckCircle } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
 import ProductCard, { type Product } from "@/components/inventory/ProductCard";
 import Pagination from "@/components/inventory/Pagination";
+import {
+  ManageCategoriesModal,
+  CategoryFormModal,
+  ConfirmDeleteModal,
+} from "@/components/inventory/CategoryModals";
 import { ProductModal, type ProductFormData } from "@/components/inventory/ProductModal";
 import { ConfirmModal } from "@/components/ConfirmModal";
 
@@ -39,6 +44,15 @@ export default function ProductsPage() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Category management state
+  const [categories, setCategories] = useState<string[]>(() =>
+    Array.from(new Set(INITIAL_PRODUCTS.map((p) => p.category))).sort()
+  );
+  const [showManageCategories, setShowManageCategories] = useState(false);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
+
   // Toast
   const [toast, setToast] = useState<string | null>(null);
   const showToast = (msg: string) => {
@@ -46,7 +60,7 @@ export default function ProductsPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Modal state
+  // Product modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [formData, setFormData] = useState<ProductFormData>(EMPTY_FORM);
@@ -65,11 +79,6 @@ export default function ProductsPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const categories = useMemo(() => {
-    const cats = new Set(products.map((p) => p.category));
-    return Array.from(cats).sort();
-  }, [products]);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -90,12 +99,42 @@ export default function ProductsPage() {
     setCurrentPage(1);
   };
 
-  const handleCategory = (cat: string) => {
+  const handleCategoryFilter = (cat: string) => {
     setActiveCategory((prev) => (prev === cat ? null : cat));
     setCurrentPage(1);
   };
 
-  // Modal handlers
+  // Category handlers
+  const handleAddCategory = (name: string) => {
+    if (!categories.includes(name)) {
+      setCategories((prev) => [...prev, name].sort());
+    }
+    setShowAddCategory(false);
+    setShowManageCategories(true);
+    showToast("Category added successfully.");
+  };
+
+  const handleEditCategory = (newName: string) => {
+    if (!editingCategory) return;
+    setCategories((prev) =>
+      prev.map((c) => (c === editingCategory ? newName : c)).sort()
+    );
+    if (activeCategory === editingCategory) setActiveCategory(newName);
+    setEditingCategory(null);
+    setShowManageCategories(true);
+    showToast("Category updated successfully.");
+  };
+
+  const handleDeleteCategory = () => {
+    if (!deletingCategory) return;
+    setCategories((prev) => prev.filter((c) => c !== deletingCategory));
+    if (activeCategory === deletingCategory) setActiveCategory(null);
+    setDeletingCategory(null);
+    setShowManageCategories(true);
+    showToast("Category deleted successfully.");
+  };
+
+  // Product modal handlers
   const handleOpenAddModal = () => {
     setModalMode("add");
     setFormData(EMPTY_FORM);
@@ -166,7 +205,7 @@ export default function ProductsPage() {
 
       handleCloseModal();
     } catch {
-      alert("Error al guardar el producto.");
+      alert("Error saving product.");
     } finally {
       setIsSubmitting(false);
     }
@@ -196,7 +235,10 @@ export default function ProductsPage() {
                 <Plus size={15} />
                 Add Product
               </button>
-              <button className="px-4 py-2 bg-white text-black text-sm font-medium rounded-full border border-black hover:bg-gray-50 transition-colors">
+              <button
+                onClick={() => setShowManageCategories(true)}
+                className="px-4 py-2 bg-white text-black text-sm font-medium rounded-full border border-black hover:bg-gray-50 transition-colors"
+              >
                 Manage Category
               </button>
             </div>
@@ -237,7 +279,7 @@ export default function ProductsPage() {
                   {categories.map((cat) => (
                     <button
                       key={cat}
-                      onClick={() => { handleCategory(cat); setDropdownOpen(false); }}
+                      onClick={() => { handleCategoryFilter(cat); setDropdownOpen(false); }}
                       className={`w-full text-left px-4 py-2 text-sm transition-colors ${
                         activeCategory === cat ? "font-semibold bg-koara-primary/30" : "hover:bg-gray-50"
                       }`}
@@ -277,6 +319,40 @@ export default function ProductsPage() {
 
         </div>
       </div>
+
+      {showManageCategories && (
+        <ManageCategoriesModal
+          categories={categories}
+          onClose={() => setShowManageCategories(false)}
+          onAdd={() => { setShowManageCategories(false); setShowAddCategory(true); }}
+          onEdit={(cat) => { setShowManageCategories(false); setEditingCategory(cat); }}
+          onDelete={(cat) => { setShowManageCategories(false); setDeletingCategory(cat); }}
+        />
+      )}
+
+      {showAddCategory && (
+        <CategoryFormModal
+          mode="add"
+          onClose={() => { setShowAddCategory(false); setShowManageCategories(true); }}
+          onConfirm={handleAddCategory}
+        />
+      )}
+
+      {editingCategory && (
+        <CategoryFormModal
+          mode="edit"
+          initialValue={editingCategory}
+          onClose={() => { setEditingCategory(null); setShowManageCategories(true); }}
+          onConfirm={handleEditCategory}
+        />
+      )}
+
+      {deletingCategory && (
+        <ConfirmDeleteModal
+          onClose={() => { setDeletingCategory(null); setShowManageCategories(true); }}
+          onConfirm={handleDeleteCategory}
+        />
+      )}
 
       <ProductModal
         isOpen={isModalOpen}
