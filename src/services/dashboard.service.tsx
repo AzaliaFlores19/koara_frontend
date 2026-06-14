@@ -39,7 +39,6 @@ interface InvoiceBackendResponse {
 
 export const dashboardService = {
   async getRealMetrics(): Promise<DashboardMetrics> {
-    // 1. Fechas dinámicas automáticas en JavaScript (YYYY-MM-DD)
     const formatDate = (date: Date) => date.toISOString().split('T')[0];
     const now = new Date();
     
@@ -50,7 +49,6 @@ export const dashboardService = {
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const firstDayStr = formatDate(firstDayOfMonth);
 
-    // 2. Traemos todo en paralelo con CAPTURA DE ERRORES INDIVIDUAL por si NestJS responde 500
     const [
       prodCount,
       clientCount,
@@ -62,47 +60,42 @@ export const dashboardService = {
       allInvoices,
       mockedApiData 
     ] = await Promise.all([
-      // Métricas base (Si fallan devuelven 0 o un arreglo vacío)
       apiClient.get<PagedResponse>("/products?limit=1").then(res => res.data.total).catch(() => 0),
       apiClient.get<PagedResponse>("/clients?limit=1").then(res => res.data.total).catch(() => 0),
       apiClient.get<PagedResponse>("/categories?limit=1").then(res => res.data.total).catch(() => 0),
       apiClient.get<LowStockProduct[]>("/products/low-stock").then(res => res.data).catch(() => []),
       
-      // Filtros de facturas propensos a romperse en días vacíos (Si fallan devuelven totalSales: 0)
-      apiClient.get<{ totalSales: number }>(`/invoices/total-invoices?startDate=${todayStr}&endDate=${todayStr}`)
-        .then(res => res.data)
-        .catch(err => {
-          console.warn("⚠️ Error en Ventas de hoy (Posiblemente vacío):", err.message);
-          return { totalSales: 0 };
-        }),
-        
-      apiClient.get<{ totalSales: number }>(`/invoices/total-invoices?startDate=${yesterdayStr}&endDate=${yesterdayStr}`)
-        .then(res => res.data)
-        .catch(err => {
-          console.warn("⚠️ Error en Ventas de ayer (Posiblemente vacío):", err.message);
-          return { totalSales: 0 };
-        }),
-        
-      apiClient.get<{ totalSales: number }>(`/invoices/total-invoices?startDate=${firstDayStr}&endDate=${todayStr}`)
-        .then(res => res.data)
-        .catch(err => {
-          console.warn("⚠️ Error en Ventas del mes:", err.message);
-          return { totalSales: 0 };
-        }),
+     apiClient.get<{ total_after_tax: number }>(`/reports/monthly-sales?startDate=${todayStr}&endDate=${todayStr}`)
+    .then(res => res.data)
+    .catch(err => {
+      console.warn("⚠️ Error en Ventas de hoy:", err.message);
+      return { total_after_tax: 0 };
+    }),
+    
+  apiClient.get<{ total_after_tax: number }>(`/reports/monthly-sales?startDate=${yesterdayStr}&endDate=${yesterdayStr}`)
+    .then(res => res.data)
+    .catch(err => {
+      console.warn("⚠️ Error en Ventas de ayer:", err.message);
+      return { total_after_tax: 0 };
+    }),
+    
+  apiClient.get<{ total_after_tax: number }>(`/reports/monthly-sales?startDate=${firstDayStr}&endDate=${todayStr}`)
+    .then(res => res.data)
+    .catch(err => {
+      console.warn("⚠️ Error en Ventas del mes:", err.message);
+      return { total_after_tax: 0 };
+    }),
         
       apiClient.get<InvoiceBackendResponse[]>("/invoices").then(res => res.data).catch(() => []),
       dashboardApi.getMetrics().catch(() => ({ bestSellingProducts: [] }))
     ]);
 
-    // 3. Formateador de moneda de Honduras (Lempiras)
     const formatCurrency = (amount: number) => 
       `L. ${amount.toLocaleString('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-    // 4. Lógica para contar las facturas pagadas de NestJS
     const emitted = allInvoices ? allInvoices.length : 0;
     const paid = allInvoices ? allInvoices.filter((inv) => inv.status === 'PAID' || inv.status === 'PAGADA').length : 0;
 
-    // 5. Construimos la respuesta unificada garantizando que las propiedades existan
     return {
       totalProducts: prodCount,
       totalClients: clientCount,
@@ -110,9 +103,9 @@ export const dashboardService = {
       lowStockProducts: lowStockData,
       bestSellingProducts: mockedApiData?.bestSellingProducts || [], 
       todaySales: {
-        current: formatCurrency(todaySalesData?.totalSales || 0),
-        yesterday: formatCurrency(yesterdaySalesData?.totalSales || 0),
-        thisMonth: formatCurrency(monthSalesData?.totalSales || 0),
+        current: formatCurrency(todaySalesData?.total_after_tax || 0),
+        yesterday: formatCurrency(yesterdaySalesData?.total_after_tax || 0),
+        thisMonth: formatCurrency(monthSalesData?.total_after_tax || 0),
       },
       invoices: {
         emitted,
