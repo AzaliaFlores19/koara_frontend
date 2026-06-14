@@ -19,8 +19,7 @@ import { BrandStrip } from "@/components/dashboard/brand-strip";
 import { StatCard } from "@/components/dashboard/StatCard";
 import DashboardLayout from "@/components/layout/layout";
 
-import { dashboardApi, DashboardMetrics } from "@/lib/api/dashboard";
-
+import { dashboardService, DashboardMetrics } from "@/services/dashboard.service";
 import koaraLogo from "@/imports/logo_insta_2.jpg";
 import tocoboLogo from "@/imports/Tocobo_logo.png";
 import medicubeLogo from "@/imports/Medicube_logo.webp";
@@ -42,11 +41,11 @@ export default function Dashboard() {
       try {
         setLoading(true);
         setError(null);
-        const data = await dashboardApi.getMetrics();
+        const data = await dashboardService.getRealMetrics();
         setMetrics(data);
       } catch (err: any) {
         console.error("Error retrieving aggregated metrics:", err);
-        setError("Could not retrieve business metrics. Please check server status.");
+        setError("No se pudieron obtener las métricas del negocio. Por favor, verifica el estado del servidor.");
       } finally {
         setLoading(false);
       }
@@ -61,7 +60,7 @@ export default function Dashboard() {
         <div className="flex min-h-[70vh] items-center justify-center">
           <div className="text-center flex flex-col items-center gap-3">
             <Loader2 className="w-10 h-10 animate-spin" style={{ color: "#D99EBD" }} />
-            <p className="text-sm font-medium text-gray-500">Loading business metrics...</p>
+            <p className="text-sm font-medium text-gray-500">Cargando métricas del negocio...</p>
           </div>
         </div>
       </DashboardLayout>
@@ -102,10 +101,10 @@ export default function Dashboard() {
               </div>
               <div className="max-w-2xl">
                 <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground">
-                  Welcome back to Koara
+                  ¡Bienvenido de nuevo a Koara!
                 </h1>
                 <p className="mt-2 text-pretty text-base text-muted-foreground">
-                  Your premium skincare management dashboard
+                  Tu panel premium para gestionar el cuidado de la piel
                 </p>
               </div>
             </div>
@@ -117,13 +116,13 @@ export default function Dashboard() {
           <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
               <div className="min-h-[140px] flex flex-col justify-between">
-                <StatCard title="Products" value={metrics.totalProducts} variant="pink" icon={<Package className="h-6 w-6" />} />
+                <StatCard title="Productos" value={metrics.totalProducts} variant="pink" icon={<Package className="h-6 w-6" />} />
               </div>
               <div className="min-h-[140px] flex flex-col justify-between">
-                <StatCard title="Clients" value={metrics.totalClients} variant="sky" icon={<Users className="h-6 w-6" />} />
+                <StatCard title="Clientes" value={metrics.totalClients} variant="sky" icon={<Users className="h-6 w-6" />} />
               </div>
               <div className="min-h-[140px] flex flex-col justify-between">
-                <StatCard title="Categories" value={metrics.totalCategories} variant="mint" icon={<Tags className="h-6 w-6" />} />
+                <StatCard title="Categorías" value={metrics.totalCategories} variant="mint" icon={<Tags className="h-6 w-6" />} />
               </div>
             </div>
           </div>
@@ -132,10 +131,10 @@ export default function Dashboard() {
         {/* ── BANDA 3: BUSINESS OVERVIEW ── */}
         <section className="w-full bg-white">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-            <h2 className="mb-6 text-2xl font-bold tracking-tight text-foreground">Business Overview</h2>
+            <h2 className="mb-6 text-2xl font-bold tracking-tight text-foreground">Resumen del negocio</h2>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
               
-              <StatCard title="Low Stock" value={metrics.lowStockProducts.length} variant="peach" icon={<AlertTriangle className="h-5 w-5" />}>
+              <StatCard title="Stock bajo" value={metrics.lowStockProducts.length} variant="peach" icon={<AlertTriangle className="h-5 w-5" />}>
                 <div className="mt-2 space-y-1">
                   {metrics.lowStockProducts.map((product) => (
                     <div key={product.name} className="flex justify-between items-center text-sm">
@@ -148,31 +147,26 @@ export default function Dashboard() {
                 </div>
               </StatCard>
 
-              <StatCard title="Today's Sales" value={metrics.todaySales.current} variant="pink" icon={<TrendingUp className="h-5 w-5" />}>
+              <StatCard title="Ventas de hoy" value={metrics.todaySales.current} variant="pink" icon={<TrendingUp className="h-5 w-5" />}>
                 <div className="mt-2 space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Yesterday</span>
+                    <span className="text-muted-foreground">Ayer</span>
                     <span className="font-semibold text-foreground">{metrics.todaySales.yesterday}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">This Month</span>
+                    <span className="text-muted-foreground">Este mes</span>
                     <span className="font-semibold text-foreground">{metrics.todaySales.thisMonth}</span>
                   </div>
                 </div>
               </StatCard>
 
-              <StatCard title="Invoices Emitted" value={metrics.invoices.emitted} variant="sky" icon={<FileText className="h-5 w-5" />}>
+              <StatCard title="Facturas emitidas" value={metrics.invoices.emitted} variant="sky" icon={<FileText className="h-5 w-5" />}>
                 <div className="mt-2 space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Paid</span>
-                    <span className="font-semibold text-green-600">{metrics.invoices.paid}</span>
+                    <span className="text-muted-foreground">Pagadas</span>
+                    <span className="font-semibold text-green-600">{metrics.invoices.emitted}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Pending</span>
-                    <span className="font-semibold text-foreground">
-                      {metrics.invoices.emitted - metrics.invoices.paid}
-                    </span>
-                  </div>
+                  
                 </div>
               </StatCard>
 
@@ -194,20 +188,18 @@ export default function Dashboard() {
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/40">
                 <Target className="h-6 w-6 text-foreground" />
               </span>
-              <h2 className="mt-5 text-2xl font-bold text-foreground">Our Mission</h2>
+              <h2 className="mt-5 text-2xl font-bold text-foreground">Nuestra misión</h2>
               <p className="mt-3 text-pretty text-sm leading-relaxed text-foreground/80">
-                To make premium, science-backed skincare effortless to manage and accessible to every
-                business, pairing elegant tools with the brands our clients love.
+                Hacer que la gestión de productos de cuidado de la piel de alta calidad, respaldados por la ciencia, sea sencilla y accesible para todos nuestros clientes, combinando herramientas elegantes con las marcas que más les gustan.
               </p>
             </div>
             <div className="flex flex-col rounded-3xl bg-white p-8 shadow-sm">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f9e7f0]">
                 <Eye className="h-6 w-6 text-[#c06fa0]" />
               </span>
-              <h2 className="mt-5 text-2xl font-bold text-foreground">Our Vision</h2>
+              <h2 className="mt-5 text-2xl font-bold text-foreground">Nuestra visión</h2>
               <p className="mt-3 text-pretty text-sm leading-relaxed text-muted-foreground">
-                A world where radiant skin is powered by smart, beautiful management — helping every
-                Koara partner grow with confidence and glow.
+                Un mundo donde la piel radiante se potencia mediante una gestión inteligente y atractiva, ayudando a cada socio de Koara a crecer con confianza.
               </p>
             </div>
           </div>
@@ -217,7 +209,7 @@ export default function Dashboard() {
         <section className="w-full bg-white">
           <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
             <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.2em] text-[#c06fa0]">
-              Brands We Carry
+              Marcas que ofrecemos
             </p>
             <BrandStrip brands={brands} />
           </div>
@@ -230,7 +222,7 @@ export default function Dashboard() {
       
       {/* Contacto: Ahora es solo texto plano, no un enlace */}
       <div>
-        <h3 className="mb-3 font-semibold text-foreground">Contact Us</h3>
+        <h3 className="mb-3 font-semibold text-foreground">Contacto</h3>
         <div className="flex items-center justify-center gap-2 text-sm text-foreground sm:justify-start">
           <Mail size={16} /> <span>info@koara.com</span>
         </div>
@@ -238,7 +230,7 @@ export default function Dashboard() {
 
       {/* Instagram: Enlace actualizado con tu link de perfil */}
       <div>
-        <h3 className="mb-3 font-semibold text-foreground">Follow Us</h3>
+        <h3 className="mb-3 font-semibold text-foreground">Síguenos</h3>
         <a 
           href="https://www.instagram.com/koara.kr?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" 
           target="_blank" 
@@ -256,21 +248,21 @@ export default function Dashboard() {
 
       {/* Catálogo: Enlace directo al visor Heyzine optimizado */}
       <div>
-        <h3 className="mb-3 font-semibold text-foreground">Catalog</h3>
+        <h3 className="mb-3 font-semibold text-foreground">Catálogo</h3>
         <a 
           href="https://heyzine.com/flip-book/2536f2e2a8.html" 
           target="_blank" 
           rel="noopener noreferrer" 
           className="flex items-center justify-center gap-2 text-sm text-foreground hover:opacity-70 sm:justify-start"
         >
-          <BookOpen size={16} /> View Our Catalog
+          <BookOpen size={16} /> Ver nuestro catálogo
         </a>
       </div>
 
     </div>
     
     <div className="mt-6 border-t border-black/15 pt-6 text-center text-xs text-foreground/60">
-      © 2026 Koara. All rights reserved.
+      © 2026 Koara. Todos los derechos reservados.
     </div>
   </div>
 </footer>

@@ -25,8 +25,8 @@ export function TopProducts({ products }: TopProductsProps) {
     <div>
       <div className="mb-5 flex items-end justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Top Products</h2>
-          <p className="text-sm text-muted-foreground">Your best sellers this month</p>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Productos Más Vendidos</h2>
+          <p className="text-sm text-muted-foreground">Tus productos más vendidos este mes</p>
         </div>
         <div className="flex gap-2">
           <button

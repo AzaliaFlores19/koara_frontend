@@ -12,15 +12,15 @@ interface LayoutProps {
 }
 
 const allNavItems = [
-  { name: "Homepage", path: "/dashboard", icon: Home, adminOnly: false },
-  { name: "Inventory", path: "/products", icon: Package, adminOnly: false },
-  { name: "Users", path: "/users", icon: UserCog, adminOnly: true },
-  { name: "Clients", path: "/clients", icon: Users, adminOnly: false },
-  { name: "Invoice", path: "/invoices", icon: FileText, adminOnly: false },
-  { name: "CAI Management", path: "/cai-management", icon: Bot, adminOnly: true },
-  { name: "Reports", path: "/reports", icon: BarChart, adminOnly: true },      
-  { name: "Audit Logs", path: "/audit-logs", icon: ClipboardList, adminOnly: true },
-  { name: "Branding", path: "/branding", icon: Package, adminOnly: true },
+  { name: "Inicio", path: "/dashboard", icon: Home, adminOnly: false },
+  { name: "Inventario", path: "/products", icon: Package, adminOnly: false },
+  { name: "Usuarios", path: "/users", icon: UserCog, adminOnly: true },
+  { name: "Clientes", path: "/clients", icon: Users, adminOnly: false },
+  { name: "Facturas", path: "/invoices", icon: FileText, adminOnly: false },
+  { name: "Gestión de CAI", path: "/cai-management", icon: Bot, adminOnly: true },
+  { name: "Reportes", path: "/reports", icon: BarChart, adminOnly: true },      
+  { name: "Registros de Auditoría", path: "/audit-logs", icon: ClipboardList, adminOnly: true },
+  { name: "Registro de Marca", path: "/branding", icon: Package, adminOnly: true },
 ];
 
 export default function DashboardLayout({ children }: LayoutProps) {
@@ -37,11 +37,11 @@ export default function DashboardLayout({ children }: LayoutProps) {
     }
   }, [pathname]); 
 
-  const isAdmin = userData?.role === "Admin";
+  const isAdmin = userData?.role === "ADMIN";
   const navItems = allNavItems.filter((item) => !item.adminOnly || isAdmin);
 
   const currentItem = allNavItems.find(item => item.path === pathname);
-  const title = currentItem ? currentItem.name : " My Profile";
+  const title = currentItem ? currentItem.name : " Mi Perfil";
 
   return (
     <div className="min-h-screen flex flex-col relative bg-koara-bg">

@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import koaraLogo from "@/imports/logo_insta_2.jpg";
-import { setAuth } from "@/lib/auth";
-import { authApi } from "@/lib/api/auth";
+import { setAuth } from "@/lib/api/auth.api";
+import { authApi } from "@/services/auth.service";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 
 const C = {
@@ -32,29 +32,29 @@ export default function Login() {
 
     try {
       // 1. Ejecuta la petición Axios procesada por nuestro interceptor simulado
-      const response = await authApi.login(formData.email, formData.password);
-      
-      const { user, token } = response; 
+      const response =
+      await authApi.login(
+        formData.email,
+        formData.password
+      );
 
-      // Guardar opcionalmente el token devuelto en localStorage si tu flujo lo requiere
-      if (typeof window !== "undefined" && token) {
-        localStorage.setItem("koara_token", token);
-      }
+    const { user, access_token } = response;
 
-      // 2. Persistir las propiedades del usuario autenticado
-      setAuth({
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      });
+    setAuth({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      token: access_token,
+    });
 
-      router.push("/dashboard");
+router.push("/dashboard");
     } catch (err: any) {
       //console.error("Login failure connection log:", err);
       // El condicional extrae de manera exacta los mensajes personalizados que inyectamos arriba
       setError(
         err?.response?.data?.message ||
-          "Invalid email credentials or loss of system server communications.",
+          "Credenciales de correo electrónico inválidas o pérdida de comunicación con el servidor del sistema.",
       );
     } finally {
       setLoading(false);
@@ -114,14 +114,14 @@ export default function Login() {
                 />
               </div>
               <h1 className="text-4xl mb-2 drop-shadow-sm font-extrabold">
-                Welcome to
+                Bienvenido a 
               </h1>
               <h2 className="text-5xl mb-5 drop-shadow-sm font-extrabold">
                 Koara
               </h2>
               <p className="text-sm text-white/90 leading-relaxed font-medium">
-                Your premium skincare management solution. Streamline your
-                business with elegant tools designed for success.
+                La solución premium para la gestión de tu negocio de cuidado de la piel. 
+                Simplifica tu gestión con herramientas elegantes diseñadas para alcanzar el éxito.
               </p>
             </div>
           </div>
@@ -146,10 +146,10 @@ export default function Login() {
 
             <div className="mb-7">
               <h2 className="text-3xl mb-1.5 text-gray-800 font-extrabold">
-                Log In
+                Iniciar Sesión 
               </h2>
               <p className="text-gray-400 text-sm font-medium">
-                Welcome back! Please enter your details.
+                ¡Bienvenido de vuelta! Por favor, ingresa tus datos.
               </p>
             </div>
 
@@ -164,13 +164,15 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1">
                 <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold">
-                  E-mail Address
+                  Dirección de Correo Electrónico
                 </label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
+                  onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Por favor, ingresa un correo válido")}
+                  onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
                   className={inputCls}
                   placeholder="admin@koara.com"
                   disabled={loading}
@@ -180,7 +182,7 @@ export default function Login() {
 
               <div className="space-y-1">
                 <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold">
-                  Password
+                  Contraseña
                 </label>
                 <div className="relative">
                   <input
@@ -188,6 +190,8 @@ export default function Login() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
+                    onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Por favor, ingresa tu contraseña")}
+                    onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
                     className={`${inputCls} pr-11`}
                     placeholder="••••••••"
                     disabled={loading}
@@ -212,7 +216,7 @@ export default function Login() {
                   style={{ color: C.dark }}
                   disabled={loading}
                 >
-                  Forgot Password?
+                  ¿Olvidaste tu contraseña?
                 </button>
               </div>
 
@@ -228,7 +232,7 @@ export default function Login() {
                   {loading ? (
                     <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
-                    "Sign In"
+                    "Iniciar sesión"
                   )}
                 </button>
               </div>

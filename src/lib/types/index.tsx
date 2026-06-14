@@ -59,3 +59,23 @@ export interface DashboardStats {
   invoicesPaid: number;
   lowStockProducts: { name: string; stock: number }[];
 }
+
+
+export interface CAICode {
+  id: string;        // UUID en tu base de datos
+  cai_code: string;  // Antes: codigo
+  is_active: boolean; // Antes: active
+  created_at?: string;
+}
+
+export interface CAIRange {
+  id: string;                  // UUID en tu base de datos
+  cai_id: string | null;       // Relación al CAI (UUID)
+  base_code: string;           // Antes: codigoBase
+  range_start: number;         // Antes: rangoInicial
+  range_end: number;           // Antes: rangoFinal
+  current_invoice_number: number;
+  expiration_date: string;     // Antes: fechaExpiracion
+  is_active: boolean;          // Antes: active
+  created_at?: string;
+}

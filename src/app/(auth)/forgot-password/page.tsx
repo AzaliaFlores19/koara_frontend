@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import koaraLogo from "@/imports/logo_insta_2.jpg";
-import { authApi } from "@/lib/api/auth"; 
+import { authApi } from "@/services/auth.service"; 
 import { ArrowLeft, AlertCircle } from "lucide-react";
 
 const C = {
@@ -88,13 +88,14 @@ export default function ForgotPassword() {
                 />
               </div>
               <h1 className="text-4xl mb-2 drop-shadow-sm" style={{ fontWeight: 800 }}>
-                Welcome to
+                  Bienvenido a
               </h1>
               <h2 className="text-5xl mb-5 drop-shadow-sm" style={{ fontWeight: 800 }}>
                 Koara
               </h2>
               <p className="text-sm text-white/90 leading-relaxed" style={{ fontWeight: 500 }}>
-                Your premium skincare management solution. Streamline your business with elegant tools designed for success.
+                La solución premium para la gestión de tu negocio de cuidado de la piel. 
+                Simplifica tu gestión con herramientas elegantes diseñadas para alcanzar el éxito.
               </p>
             </div>
           </div>
@@ -122,7 +123,7 @@ export default function ForgotPassword() {
                 disabled={loading}
               >
                 <ArrowLeft size={14} />
-                Back to Log In
+                Regresar a Inicio de Sesión
               </button>
             </div>
 
@@ -138,27 +139,30 @@ export default function ForgotPassword() {
               <>
                 <div className="mb-7">
                   <h2 className="text-3xl mb-1.5 text-gray-800" style={{ fontWeight: 800 }}>
-                    Forgot Password?
+                    ¿Olvidaste tu contraseña?
                   </h2>
                   <p className="text-gray-400 text-sm" style={{ fontWeight: 500 }}>
-                    Enter your email address to receive a recovery reset link.
+                    Ingresa tu dirección de correo electrónico para recibir un enlace de restablecimiento.
                   </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-1">
                     <label className="block text-xs text-gray-500 uppercase tracking-wider" style={{ fontWeight: 600 }}>
-                      E-mail Address
+                      Correo Electrónico
                     </label>
                     <input
                       type="email"
                       name="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Por favor, ingresa un correo válido")}
+                      onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
                       className={inputCls}
                       placeholder="name@example.com"
                       disabled={loading}
                       required
+                      title="Por favor, ingresa una dirección de correo válida (Ej: admin@koara.com)"
                     />
                   </div>
 
@@ -172,7 +176,7 @@ export default function ForgotPassword() {
                       {loading ? (
                         <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       ) : (
-                        "Send Reset Link"
+                        "Enviar Enlace de Restablecimiento"
                       )}
                     </button>
                   </div>
@@ -192,10 +196,10 @@ export default function ForgotPassword() {
                 </div>
                 
                 <h2 className="text-3xl mb-2 text-gray-800" style={{ fontWeight: 800 }}>
-                  Check Your Email
+                  Enlace de recuperación enviado
                 </h2>
                 <p className="text-gray-400 text-sm max-w-xs mx-auto mb-6" style={{ fontWeight: 500 }}>
-                  We have sent a confirmation recovery link to <span className="text-gray-700 font-semibold break-all">{email}</span>.
+                  Hemos enviado un enlace de recuperación a <span className="text-gray-700 font-semibold break-all">{email}</span>.
                 </p>
 
                 <button
@@ -204,7 +208,7 @@ export default function ForgotPassword() {
                   className="w-full py-3 px-4 rounded-xl text-white text-sm transition-all hover:shadow-md hover:opacity-95 active:scale-[0.99] font-semibold"
                   style={{ background: `linear-gradient(to right, ${C.primary}, ${C.dark})` }}
                 >
-                  Return to Log In
+                  Regresar a Inicio de Sesión
                 </button>
               </div>
             )}
