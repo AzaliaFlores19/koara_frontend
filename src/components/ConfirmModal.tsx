@@ -26,13 +26,13 @@ export function ConfirmModal({ isOpen, message, onConfirm, onCancel }: ConfirmMo
             onClick={onCancel}
             className="px-6 py-3 rounded-full font-black text-sm text-slate-700 bg-[#e3c5d1] border-2 border-transparent hover:border-slate-200 transition-all active:translate-y-0.5"
           >
-            Cancel
+            Cancelar
           </button>
           <button
             onClick={onConfirm}
             className="px-6 py-3 rounded-full font-black text-sm text-white bg-[#703A61] border-2 border-slate-200 hover:-translate-y-0.5 transition-all active:translate-y-0"
           >
-            Confirm
+            Confirmar
           </button>
         </div>
       </div>

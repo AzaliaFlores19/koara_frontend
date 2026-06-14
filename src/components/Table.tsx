@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { ConfirmModal } from "./ConfirmModal";
+import Pagination from "./inventory/Pagination";
 
 interface TableActionOptions {
   openConfirm: (config: {
@@ -23,12 +24,14 @@ interface TableProps<T> {
   data: T[];
   columns: Column<T>[];
   itemsPerPage?: number;
+  enableMutationToast?: boolean;
 }
 
 export function Table<T extends { id: string | number }>({
   data,
   columns,
   itemsPerPage = 7,
+  enableMutationToast = true,
 }: TableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -47,6 +50,10 @@ export function Table<T extends { id: string | number }>({
   const totalPages = Math.ceil(data.length / itemsPerPage);
 
   useEffect(() => {
+    if (!enableMutationToast) {
+      return;
+    }
+
     if (hasJustDeleted.current && data.length < prevLengthRef.current) {
       setToastMessage("Se ha eliminado de manera exitosa!");
     }
@@ -94,14 +101,18 @@ export function Table<T extends { id: string | number }>({
       newMap.set(item.id, item);
     });
     prevDataMapRef.current = newMap;
-  }, [data]);
+  }, [data, enableMutationToast]);
 
   useEffect(() => {
+    if (!enableMutationToast) {
+      return;
+    }
+
     if (toastMessage) {
       const timer = setTimeout(() => setToastMessage(null), 3000);
       return () => clearTimeout(timer);
     }
-  }, [toastMessage]);
+  }, [toastMessage, enableMutationToast]);
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedData = data.slice(startIndex, startIndex + itemsPerPage);
@@ -122,7 +133,7 @@ export function Table<T extends { id: string | number }>({
 
   return (
     <div className="space-y-10 animate-koara-fade relative">
-      {toastMessage &&
+      {enableMutationToast && toastMessage &&
         createPortal(
           <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-koara-modal">
             <div className="bg-gradient-to-br from-white to-[#F6DEEB] border-2 border-slate-200 rounded-2xl px-6 py-3 shadow-xl flex items-center gap-3">
@@ -210,41 +221,7 @@ export function Table<T extends { id: string | number }>({
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4">
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="koara-pagination-btn !w-12 !h-12 hover:-translate-y-1 transition-transform"
-            aria-label="Previous page"
-          >
-            <ChevronLeft size={22} />
-          </button>
-
-          <div className="flex items-center gap-2 bg-white/40 p-1.5 rounded-full border-2 border-slate-900">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => goToPage(page)}
-                className={`w-10 h-10 rounded-full font-black text-sm transition-all ${
-                  currentPage === page
-                    ? "bg-[#f4b8d4] text-black border-2 border-slate-900 shadow-[2px_2px_0px_#000] -translate-y-0.5"
-                    : "hover:bg-white text-slate-500"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="koara-pagination-btn !w-12 !h-12 hover:-translate-y-1 transition-transform"
-            aria-label="Next page"
-          >
-            <ChevronRight size={22} />
-          </button>
-        </div>
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 
 import "@/styles/index.css";
+import AuthGuard from "@/components/auth/auth-guard";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -23,3 +24,16 @@ export default function RootLayout({
     </html>
   );
 }
+
+
+
+
+// <html lang="es">
+//       <body className="antialiased">
+//         {/* El Guard vigilará de forma global toda la navegación */}
+//         <AuthGuard>
+//           {children}
+//         </AuthGuard>
+//       </body>
+//     </html>
+//   );

@@ -3,6 +3,7 @@ import img9 from "@/imports/image-9.png";
 import img10 from "@/imports/image-10.png";
 import img1 from "@/imports/image-1.png";
 import img12 from "@/imports/image-12.png";
+import { CAICode, CAIRange } from "../types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -25,10 +26,116 @@ const MOCK_USERS = [
   { id: "8", name: "Admin User", email: "admin4@koara.com", role: "Admin", password: "Password123" },
 ];
 
+let MOCK_CAI_CODES: CAICode[] = [
+  { id: "uuid-cai-1", cai_code: "123456-ABCDEF-123456-ABCDEF-123456-KT", is_active: true },
+  { id: "uuid-cai-2", cai_code: "123456-ABCDEF-123456-ABCDEF-123456-TT", is_active: false },
+];
+
+let MOCK_CAI_RANGES: CAIRange[] = [
+  { id: "uuid-range-1", cai_id: "uuid-cai-1", base_code: "000-001-01", range_start: 1, range_end: 5000, current_invoice_number: 1, expiration_date: "2026-12-31", is_active: true },
+];
+
 apiClient.interceptors.request.use(
   (config) => {
     const url = config.url || "";
+    const method = config.method?.toLowerCase();
+    const segments = url.split("/");
+    const id = segments[segments.length - 1];
 
+   if (url === "cai" || url.includes("cai")) {
+
+  // GET ALL
+  if (method === "get" && url.endsWith("cai")) {
+    config.adapter = async () => ({ data: MOCK_CAI_CODES, status: 200, statusText: "OK", headers: config.headers, config });
+  }
+  // POST (CREATE)
+  if (method === "post") {
+    config.adapter = async () => {
+      const body = typeof config.data === "string" ? JSON.parse(config.data) : config.data;
+      const newCode = { id: `uuid-${Date.now()}`, cai_code: body.cai_code, is_active: true };
+      MOCK_CAI_CODES.push(newCode);
+      return { data: MOCK_CAI_CODES, status: 201, statusText: "Created", headers: config.headers, config };
+    };
+  }
+  // PATCH (DEACTIVATE/TOGGLE)
+  if (method === "patch" && url.includes("deactivate")) {
+    config.adapter = async () => {
+      const targetId = segments[segments.length - 2]; // El id está antes de /deactivate
+      MOCK_CAI_CODES = MOCK_CAI_CODES.map(c => c.id === targetId ? { ...c, is_active: !c.is_active } : c);
+      return { data: MOCK_CAI_CODES, status: 200, statusText: "OK", headers: config.headers, config };
+    };
+  }
+  // PATCH (UPDATE GENERAL)
+  if (method === "patch" && !url.includes("deactivate")) {
+    config.adapter = async () => {
+      const body = typeof config.data === "string" ? JSON.parse(config.data) : config.data;
+      MOCK_CAI_CODES = MOCK_CAI_CODES.map(c => c.id === id ? { ...c, cai_code: body.cai_code } : c);
+      return { data: MOCK_CAI_CODES, status: 200, statusText: "OK", headers: config.headers, config };
+    };
+  }
+}
+
+  if (url === "cai-ranges" || url.includes("cai-ranges/")) {
+  // GET ALL: Obtener todos los rangos (cai-ranges)
+  if (method === "get" && url === "cai-ranges") {
+    config.adapter = async () => ({
+      data: MOCK_CAI_RANGES, status: 200, statusText: "OK", headers: config.headers, config
+    });
+  }
+
+  // POST: Registrar nuevo rango (cai-ranges)
+  if (method === "post" && url === "cai-ranges") {
+    config.adapter = async () => {
+      const body = typeof config.data === "string" ? JSON.parse(config.data) : config.data;
+      const newRange: CAIRange = {
+        id: `range-uuid-${Date.now()}`,
+        cai_id: body.cai_id,
+        base_code: body.base_code,
+        range_start: Number(body.range_start),
+        range_end: Number(body.range_end),
+        current_invoice_number: Number(body.range_start), // Inicializa en el inicio del rango
+        expiration_date: body.expiration_date,
+        is_active: true,
+      };
+      MOCK_CAI_RANGES.push(newRange);
+      return { data: MOCK_CAI_RANGES, status: 201, statusText: "Created", headers: config.headers, config };
+    };
+  }
+
+  // PUT: Modificar un rango completo (cai-ranges/:id)
+  if (method === "put") {
+    config.adapter = async () => {
+      const id = url.split("/").pop() || "";
+      const body = typeof config.data === "string" ? JSON.parse(config.data) : config.data;
+      
+      MOCK_CAI_RANGES = MOCK_CAI_RANGES.map(r => 
+        r.id === id ? {
+          ...r,
+          cai_id: body.cai_id,
+          base_code: body.base_code,
+          range_start: Number(body.range_start),
+          range_end: Number(body.range_end),
+          expiration_date: body.expiration_date,
+          is_active: body.is_active ?? r.is_active
+        } : r
+      );
+      return { data: MOCK_CAI_RANGES, status: 200, statusText: "OK", headers: config.headers, config };
+    };
+  }
+
+  // PATCH: Desactivar rango lógicamente (cai-ranges/:id/deactivate)
+  if (method === "patch" && url.includes("deactivate")) {
+    config.adapter = async () => {
+      const segments = url.split("/");
+      const id = segments[segments.length - 2];
+      
+      MOCK_CAI_RANGES = MOCK_CAI_RANGES.map(r => 
+        r.id === id ? { ...r, is_active: !r.is_active } : r
+      );
+      return { data: MOCK_CAI_RANGES, status: 200, statusText: "OK", headers: config.headers, config };
+    };
+  }
+}
     // 1. Simular Login con Validación Real de Credenciales
     if (url.includes("auth/login")) {
       config.adapter = async () => {
@@ -267,4 +374,10 @@ export async function apiPut<T>(path: string, body: unknown): Promise<T> {
 export async function apiDelete(path: string): Promise<void> {
   const cleanPath = path.startsWith("/") ? path.slice(1) : path;
   await apiClient.delete(cleanPath);
+}
+
+export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
+  const cleanPath = path.startsWith("/") ? path.slice(1) : path;
+  const response = await apiClient.patch<T>(cleanPath, body);
+  return response.data;
 }
