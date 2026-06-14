@@ -14,6 +14,7 @@ import {
   XCircle,
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import Pagination from "@/components/inventory/Pagination";
 
 type Client = {
@@ -29,6 +30,21 @@ type ClientForm = Omit<Client, "id">;
 type Notice = {
   message: string;
   type: "success" | "danger";
+};
+
+type PurchaseHistoryItem = {
+  id: number;
+  invoiceNumber: string;
+  date: string;
+  total: number;
+  status: "Pagada" | "Pendiente";
+};
+
+type MostPurchasedProduct = {
+  id: number;
+  name: string;
+  totalSpent: number;
+  units: number;
 };
 
 const INITIAL_CLIENTS: Client[] = [
@@ -105,15 +121,54 @@ const EMPTY_FORM: ClientForm = {
 };
 
 const CLIENTS_PER_PAGE = 6;
+const RTN_REGEX = /^\d{14}$/;
+
+const PURCHASE_HISTORY: Record<number, PurchaseHistoryItem[]> = {
+  1: [
+    { id: 1, invoiceNumber: "FAC-001", date: "10/06/2026", total: 1280, status: "Pagada" },
+    { id: 2, invoiceNumber: "FAC-014", date: "04/06/2026", total: 640, status: "Pagada" },
+    { id: 3, invoiceNumber: "FAC-019", date: "29/05/2026", total: 420, status: "Pendiente" },
+  ],
+  2: [
+    { id: 4, invoiceNumber: "FAC-022", date: "08/06/2026", total: 850, status: "Pagada" },
+    { id: 5, invoiceNumber: "FAC-027", date: "02/06/2026", total: 310, status: "Pagada" },
+  ],
+  3: [
+    { id: 6, invoiceNumber: "FAC-031", date: "06/06/2026", total: 990, status: "Pagada" },
+  ],
+};
+
+const MOST_PURCHASED_PRODUCTS: Record<number, MostPurchasedProduct[]> = {
+  1: [
+    { id: 1, name: "Centella Ampoule", totalSpent: 540, units: 6 },
+    { id: 2, name: "Glow Serum", totalSpent: 420, units: 4 },
+    { id: 3, name: "Sun Shield", totalSpent: 320, units: 5 },
+  ],
+  2: [
+    { id: 4, name: "Velvet Cream", totalSpent: 380, units: 3 },
+    { id: 5, name: "Clean Mist", totalSpent: 180, units: 4 },
+  ],
+  3: [
+    { id: 6, name: "Repair Oil", totalSpent: 420, units: 2 },
+    { id: 7, name: "Pure Cleanser", totalSpent: 250, units: 5 },
+  ],
+};
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
   const [search, setSearch] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [clientModalMode, setClientModalMode] = useState<"add" | "edit">("add");
   const [formData, setFormData] = useState<ClientForm>(EMPTY_FORM);
   const [formError, setFormError] = useState("");
   const [notice, setNotice] = useState<Notice | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
+  const [historyClientId, setHistoryClientId] = useState<number | null>(null);
+  const [mostPurchasedClientId, setMostPurchasedClientId] = useState<
+    number | null
+  >(null);
+  const [clientToDeleteId, setClientToDeleteId] = useState<number | null>(null);
 
   const filteredClients = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -145,6 +200,8 @@ export default function ClientsPage() {
     setIsAddModalOpen(false);
     setFormData(EMPTY_FORM);
     setFormError("");
+    setSelectedClientId(null);
+    setClientModalMode("add");
   };
 
   const showNotice = (message: string, type: Notice["type"]) => {
@@ -152,7 +209,28 @@ export default function ClientsPage() {
     window.setTimeout(() => setNotice(null), 2600);
   };
 
-  const handleAddClient = (event: FormEvent<HTMLFormElement>) => {
+  const openAddModal = () => {
+    setClientModalMode("add");
+    setFormData(EMPTY_FORM);
+    setSelectedClientId(null);
+    setFormError("");
+    setIsAddModalOpen(true);
+  };
+
+  const openEditModal = (client: Client) => {
+    setClientModalMode("edit");
+    setSelectedClientId(client.id);
+    setFormData({
+      name: client.name,
+      email: client.email,
+      phone: client.phone,
+      rtn: client.rtn ?? "",
+    });
+    setFormError("");
+    setIsAddModalOpen(true);
+  };
+
+  const handleSaveClient = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextClient = {
@@ -164,6 +242,22 @@ export default function ClientsPage() {
 
     if (!nextClient.name || !nextClient.email || !nextClient.phone) {
       setFormError("Completa nombre, correo y telefono para guardar.");
+      return;
+    }
+
+    if (nextClient.rtn && !RTN_REGEX.test(nextClient.rtn)) {
+      setFormError("El RTN debe tener exactamente 14 digitos numericos.");
+      return;
+    }
+
+    if (clientModalMode === "edit" && selectedClientId) {
+      setClients((currentClients) =>
+        currentClients.map((client) =>
+          client.id === selectedClientId ? { ...client, ...nextClient } : client,
+        ),
+      );
+      closeAddModal();
+      showNotice("Cliente actualizado correctamente.", "success");
       return;
     }
 
@@ -183,12 +277,23 @@ export default function ClientsPage() {
     setClients((currentClients) =>
       currentClients.filter((client) => client.id !== clientId),
     );
+    setClientToDeleteId(null);
     showNotice("Cliente eliminado correctamente.", "danger");
   };
 
-  const handlePendingAction = (action: string) => {
-    showNotice(`${action} se completara en la Parte 2.`, "success");
-  };
+  const clientToDelete = clients.find((client) => client.id === clientToDeleteId);
+  const selectedHistoryClient = clients.find(
+    (client) => client.id === historyClientId,
+  );
+  const selectedMostPurchasedClient = clients.find(
+    (client) => client.id === mostPurchasedClientId,
+  );
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("es-HN", {
+      style: "currency",
+      currency: "HNL",
+      minimumFractionDigits: 2,
+    }).format(value);
 
   return (
     <DashboardLayout>
@@ -197,7 +302,7 @@ export default function ClientsPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <button
               type="button"
-              onClick={() => setIsAddModalOpen(true)}
+              onClick={openAddModal}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#2B1B25] active:translate-y-0 sm:order-2"
             >
               <Plus size={18} />
@@ -265,7 +370,7 @@ export default function ClientsPage() {
                   <div className="mt-4 flex items-center justify-end gap-2">
                     <button
                       type="button"
-                      onClick={() => handlePendingAction("Historial de compras")}
+                      onClick={() => setHistoryClientId(client.id)}
                       className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-black bg-white text-black shadow-sm transition hover:bg-[#F4B8D4]"
                       aria-label={`Ver historial de ${client.name}`}
                       title="Historial de compras"
@@ -274,9 +379,7 @@ export default function ClientsPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() =>
-                        handlePendingAction("Productos mas comprados")
-                      }
+                      onClick={() => setMostPurchasedClientId(client.id)}
                       className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-black bg-white text-black shadow-sm transition hover:bg-[#F4B8D4]"
                       aria-label={`Ver productos mas comprados por ${client.name}`}
                       title="Productos mas comprados"
@@ -285,7 +388,7 @@ export default function ClientsPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handlePendingAction("Editar cliente")}
+                      onClick={() => openEditModal(client)}
                       className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-black bg-white text-black shadow-sm transition hover:bg-[#F4B8D4]"
                       aria-label={`Editar ${client.name}`}
                       title="Editar cliente"
@@ -294,7 +397,7 @@ export default function ClientsPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteClient(client.id)}
+                      onClick={() => setClientToDeleteId(client.id)}
                       className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-black bg-white text-black shadow-sm transition hover:bg-[#F4B8D4]"
                       aria-label={`Eliminar ${client.name}`}
                       title="Eliminar cliente"
@@ -326,17 +429,17 @@ export default function ClientsPage() {
         </section>
 
         {isAddModalOpen && (
-          <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 sm:pt-16">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <div
               className="absolute inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade"
               onClick={closeAddModal}
             />
-            <div className="koara-modal-card animate-koara-modal">
+            <div className="koara-modal-card no-scrollbar max-h-[calc(100vh-2rem)] overflow-y-auto animate-koara-modal">
               <h2 className="mb-6 text-2xl font-bold text-black">
-                Add Client
+                {clientModalMode === "add" ? "Add Client" : "Edit Client"}
               </h2>
 
-              <form onSubmit={handleAddClient} className="space-y-5">
+              <form onSubmit={handleSaveClient} className="space-y-5">
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-black">
                     Name
@@ -407,7 +510,9 @@ export default function ClientsPage() {
                       }))
                     }
                     className="koara-input-field"
-                    placeholder="RTN opcional"
+                    inputMode="numeric"
+                    maxLength={14}
+                    placeholder="RTN opcional, 14 digitos"
                   />
                 </div>
 
@@ -433,6 +538,157 @@ export default function ClientsPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        <ConfirmModal
+          isOpen={!!clientToDelete}
+          message={
+            clientToDelete
+              ? `Seguro que quieres eliminar a ${clientToDelete.name}? Esta accion no se puede deshacer.`
+              : ""
+          }
+          onConfirm={() => {
+            if (clientToDelete) handleDeleteClient(clientToDelete.id);
+          }}
+          onCancel={() => setClientToDeleteId(null)}
+        />
+
+        {selectedHistoryClient && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade"
+              onClick={() => setHistoryClientId(null)}
+            />
+            <div className="relative w-full max-w-2xl rounded-[1.75rem] border-2 border-black bg-[#F6DEEB] p-6 shadow-2xl no-scrollbar max-h-[calc(100vh-2rem)] overflow-y-auto animate-koara-modal">
+              <div className="mb-5">
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#8C5E78]">
+                  Historial de compras
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-black">
+                  {selectedHistoryClient.name}
+                </h2>
+              </div>
+
+              <div className="no-scrollbar max-h-[55vh] overflow-y-auto rounded-3xl border-2 border-black bg-white">
+                {(PURCHASE_HISTORY[selectedHistoryClient.id] ?? []).length > 0 ? (
+                  <div className="divide-y divide-black/10">
+                    {(PURCHASE_HISTORY[selectedHistoryClient.id] ?? []).map(
+                      (invoice) => (
+                        <div
+                          key={invoice.id}
+                          className="grid gap-3 px-5 py-4 text-sm text-slate-700 sm:grid-cols-[1.1fr_1fr_1fr_0.9fr]"
+                        >
+                          <p>
+                            <span className="font-black text-slate-900">
+                              Factura:{" "}
+                            </span>
+                            {invoice.invoiceNumber}
+                          </p>
+                          <p>
+                            <span className="font-black text-slate-900">
+                              Fecha:{" "}
+                            </span>
+                            {invoice.date}
+                          </p>
+                          <p>
+                            <span className="font-black text-slate-900">
+                              Total:{" "}
+                            </span>
+                            {formatCurrency(invoice.total)}
+                          </p>
+                          <p>
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs font-black ${
+                                invoice.status === "Pagada"
+                                  ? "bg-[#DCFCE7] text-[#166534]"
+                                  : "bg-[#FEF3C7] text-[#92400E]"
+                              }`}
+                            >
+                              {invoice.status}
+                            </span>
+                          </p>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                ) : (
+                  <p className="px-5 py-10 text-center text-sm font-bold text-slate-500">
+                    Este cliente aun no tiene facturas registradas.
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setHistoryClientId(null)}
+                  className="rounded-full bg-[#F4B8D4] px-7 py-3 text-sm font-black text-[#703A61] shadow-sm transition hover:bg-[#E8A7C9] active:translate-y-0.5"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {selectedMostPurchasedClient && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade"
+              onClick={() => setMostPurchasedClientId(null)}
+            />
+            <div className="relative w-full max-w-xl rounded-[1.75rem] border-2 border-black bg-[#F6DEEB] p-6 shadow-2xl no-scrollbar max-h-[calc(100vh-2rem)] overflow-y-auto animate-koara-modal">
+              <div className="mb-5">
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#8C5E78]">
+                  Productos mas comprados
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-black">
+                  {selectedMostPurchasedClient.name}
+                </h2>
+              </div>
+
+              <div className="no-scrollbar max-h-[58vh] space-y-3 overflow-y-auto">
+                {(MOST_PURCHASED_PRODUCTS[selectedMostPurchasedClient.id] ?? [])
+                  .length > 0 ? (
+                  (MOST_PURCHASED_PRODUCTS[selectedMostPurchasedClient.id] ?? []).map(
+                    (product, index) => (
+                      <div
+                        key={product.id}
+                        className="grid grid-cols-[auto_1fr] gap-4 rounded-3xl border-2 border-black bg-white px-5 py-4 sm:grid-cols-[auto_1fr_auto]"
+                      >
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F4B8D4] text-sm font-black text-black">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="font-black text-black">{product.name}</p>
+                          <p className="text-sm font-medium text-slate-600">
+                            {product.units} unidades compradas
+                          </p>
+                        </div>
+                        <p className="col-span-2 text-sm font-black text-[#703A61] sm:col-span-1 sm:self-center">
+                          {formatCurrency(product.totalSpent)}
+                        </p>
+                      </div>
+                    ),
+                  )
+                ) : (
+                  <p className="rounded-3xl border-2 border-black bg-white px-5 py-10 text-center text-sm font-bold text-slate-500">
+                    Este cliente aun no tiene productos comprados.
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setMostPurchasedClientId(null)}
+                  className="rounded-full bg-[#F4B8D4] px-7 py-3 text-sm font-black text-[#703A61] shadow-sm transition hover:bg-[#E8A7C9] active:translate-y-0.5"
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
           </div>
         )}
