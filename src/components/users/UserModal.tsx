@@ -6,8 +6,8 @@ import { User } from "@/lib/api/auth";
 interface UserModalProps {
   isOpen: boolean;
   mode: "add" | "edit";
-  formData: { name: string; email: string; role: User["role"] };
-  setFormData: (data: { name: string; email: string; role: User["role"] }) => void;
+  formData: { name: string; email: string; role: User["role"]; base_code: string };
+  setFormData: (data: { name: string; email: string; role: User["role"]; base_code: string }) => void;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
   isSubmitting: boolean;
@@ -36,16 +36,30 @@ export function UserModal({
         </h2>
         
         <form onSubmit={onSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-black uppercase tracking-wider">Name</label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="koara-input-field"
-              placeholder="Enter full name"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-black uppercase tracking-wider">Name</label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="koara-input-field"
+                placeholder="Enter full name"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-black uppercase tracking-wider">Base Code</label>
+              <input
+                type="text"
+                required
+                value={formData.base_code}
+                onChange={(e) => setFormData({ ...formData, base_code: e.target.value })}
+                className="koara-input-field"
+                placeholder="e.g. ADM-001"
+              />
+            </div>
           </div>
           
           <div className="space-y-2">

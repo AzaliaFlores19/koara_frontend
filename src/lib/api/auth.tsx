@@ -6,6 +6,7 @@ export interface User {
   email: string;
   role: "Admin" | "Employee";
   phone?: string;
+  base_code: string;
 }
 
 export const authApi = {
