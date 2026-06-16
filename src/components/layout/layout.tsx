@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Menu, X, Home, Package, Users, FileText, UserCog, BarChart, Bot, ClipboardList } from "lucide-react";
 import koaraLogo from "@/imports/logo_insta_2.jpg"; 
 import titleIcon from "@/imports/image-removebg-preview_1-2.png";
-import { getAuth } from "@/lib/auth"; 
+import { getAuth, isAdmin as checkIsAdmin } from "@/lib/auth"; 
 
 interface LayoutProps {
   children: ReactNode;
@@ -37,7 +37,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
     }
   }, [pathname]); 
 
-  const isAdmin = userData?.role === "ADMIN";
+  const isAdmin = checkIsAdmin();
   const navItems = allNavItems.filter((item) => !item.adminOnly || isAdmin);
 
   const currentItem = allNavItems.find(item => item.path === pathname);

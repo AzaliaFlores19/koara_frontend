@@ -1,14 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Search, Plus, Pencil, Trash2, Shield, Loader2 } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
 import { usersApi } from "@/lib/api/users";
 import { User } from "@/lib/api/auth";
 import { UserModal } from "@/components/users/UserModal";
 import { Table } from "@/components/Table";
+import { isAdmin as checkIsAdmin } from "@/lib/auth";
 
 export default function UsersPage() {
+  const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,48 +20,71 @@ export default function UsersPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    email: string;
+    role: User["role"];
+    base_code: string;
+    password?: string;
+    phone?: string;
+  }>({
     name: "",
     email: "",
-    role: "Employee" as User["role"],
+    role: "EMPLOYEE",
+    base_code: "",
+    password: "",
+    phone: "",
   });
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const admin = checkIsAdmin();
+    if (!admin) {
+      router.replace("/dashboard");
+    } else {
+      setIsAuthorized(true);
+      fetchUsers();
+    }
+  }, [router]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       const data = await usersApi.getAll();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching users:", err);
       setError("Failed to load users. Please try again later.");
+      setUsers([]);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   const handleOpenAddModal = () => {
     setModalMode("add");
-    setFormData({ name: "", email: "", role: "Employee" });
+    setFormData({ name: "", email: "", role: "EMPLOYEE", base_code: "", password: "", phone: "" });
     setSelectedUserId(null);
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (user: User) => {
     setModalMode("edit");
-    setFormData({ name: user.name, email: user.email, role: user.role });
+    setFormData({ 
+      name: user.name, 
+      email: user.email, 
+      role: user.role, 
+      base_code: user.base_code || "",
+      phone: user.phone || ""
+    });
     setSelectedUserId(user.id);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setFormData({ name: "", email: "", role: "Employee" });
+    setFormData({ name: "", email: "", role: "EMPLOYEE", base_code: "", password: "", phone: "" });
     setSelectedUserId(null);
   };
 
@@ -65,32 +92,26 @@ export default function UsersPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-
       if (modalMode === "add") {
-        const newUser: User = {
-          id: (Math.max(...users.map((u) => parseInt(u.id)), 0) + 1).toString(),
+        await usersApi.create({
           name: formData.name,
           email: formData.email,
           role: formData.role,
-        };
-
-        setUsers((prev) => [...prev, newUser]);
+          base_code: formData.base_code,
+          password: formData.password,
+          phone: formData.phone,
+        });
       } else if (selectedUserId) {
-        setUsers((prev) =>
-          prev.map((u) =>
-            u.id === selectedUserId
-              ? {
-                  ...u,
-                  name: formData.name,
-                  email: formData.email,
-                  role: formData.role,
-                }
-              : u,
-          ),
-        );
+        await usersApi.update(selectedUserId, {
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          base_code: formData.base_code,
+          phone: formData.phone,
+        });
       }
 
+      await fetchUsers();
       handleCloseModal();
     } catch (err) {
       console.error("Error saving user:", err);
@@ -100,15 +121,22 @@ export default function UsersPage() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await usersApi.deactivate(id);
+      await fetchUsers();
+    } catch (err) {
+      console.error("Error deactivating user:", err);
+      alert("Failed to deactivate user.");
+    }
   };
 
-  const filteredUsers = users.filter(
+  const filteredUsers = Array.isArray(users) ? users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.base_code?.toLowerCase().includes(searchQuery.toLowerCase()),
+  ) : [];
 
   const columns = [
     {
@@ -129,11 +157,17 @@ export default function UsersPage() {
       ),
     },
     {
+      header: "Base Code",
+      render: (user: User) => (
+        <span className="text-sm font-mono text-koara-dark">{user.base_code || "N/A"}</span>
+      ),
+    },
+    {
       header: "Role",
       render: (user: User) => (
         <span
           className={
-            user.role === "Admin" ? "k-badge-admin" : "k-badge-employee"
+            user.role === "ADMIN" ? "k-badge-admin" : "k-badge-employee"
           }
         >
           {user.role}
@@ -168,7 +202,7 @@ export default function UsersPage() {
     },
   ];
 
-  if (loading && users.length === 0) {
+  if (isAuthorized === null || (loading && users.length === 0)) {
     return (
       <DashboardLayout>
         <div className="flex min-h-[70vh] items-center justify-center">
@@ -177,6 +211,8 @@ export default function UsersPage() {
       </DashboardLayout>
     );
   }
+
+  if (!isAuthorized) return null;
 
   return (
     <DashboardLayout>

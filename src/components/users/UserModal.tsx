@@ -1,13 +1,13 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronDown } from "lucide-react";
 import { User } from "@/lib/api/auth";
 
 interface UserModalProps {
   isOpen: boolean;
   mode: "add" | "edit";
-  formData: { name: string; email: string; role: User["role"] };
-  setFormData: (data: { name: string; email: string; role: User["role"] }) => void;
+  formData: { name: string; email: string; role: User["role"]; base_code: string; password?: string; phone?: string };
+  setFormData: (data: { name: string; email: string; role: User["role"]; base_code: string; password?: string; phone?: string }) => void;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
   isSubmitting: boolean;
@@ -48,28 +48,70 @@ export function UserModal({
             />
           </div>
           
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-black uppercase tracking-wider">Email</label>
+              <input
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="koara-input-field"
+                placeholder="name@example.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-black uppercase tracking-wider">Phone (Optional)</label>
+              <input
+                type="text"
+                value={formData.phone || ""}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="koara-input-field"
+                placeholder="e.g. 9999-9999"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <label className="text-xs font-bold text-black uppercase tracking-wider">Email</label>
+            <label className="text-xs font-bold text-black uppercase tracking-wider">Base Code (Required)</label>
             <input
-              type="email"
+              type="text"
               required
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              value={formData.base_code}
+              onChange={(e) => setFormData({ ...formData, base_code: e.target.value })}
               className="koara-input-field"
-              placeholder="name@example.com"
+              placeholder="e.g. ADM-001"
             />
           </div>
+
+          {mode === "add" && (
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-black uppercase tracking-wider">Password</label>
+              <input
+                type="password"
+                required={mode === "add"}
+                value={formData.password || ""}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="koara-input-field"
+                placeholder="Min 8 chars, 1 upper, 1 lower, 1 number"
+              />
+            </div>
+          )}
           
           <div className="space-y-2">
             <label className="text-xs font-bold text-black uppercase tracking-wider">Role</label>
-            <select
-              value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value as User["role"] })}
-              className="koara-input-field appearance-none"
-            >
-              <option value="Employee">Employee</option>
-              <option value="Admin">Admin</option>
-            </select>
+            <div className="relative">
+              <select
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as User["role"] })}
+                className="koara-input-field appearance-none pr-10"
+              >
+                <option value="EMPLOYEE">Employee</option>
+                <option value="ADMIN">Admin</option>
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-900 pointer-events-none" size={18} />
+            </div>
           </div>
 
           <div className="flex gap-4 pt-4">
