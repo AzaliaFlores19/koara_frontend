@@ -182,7 +182,6 @@ export default function InvoicesPage() {
           </button>
         </div>
       ),
-      align: "right" as const,
     },
   ];
 
@@ -216,7 +215,7 @@ export default function InvoicesPage() {
             </div>
 
             {/* Date Picker */}
-            <div className="w-full">
+            <div className="w-full md:col-start-3">
               <DateRangePicker
                 start={startDate}
                 end={endDate}
@@ -226,20 +225,6 @@ export default function InvoicesPage() {
                 }}
                 className="w-full"
               />
-            </div>
-
-            {/* Status Filter */}
-            <div className="relative">
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-900 pointer-events-none" size={18} />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full pl-4 pr-12 py-3 rounded-xl border-2 border-slate-900 focus:outline-none bg-white text-sm font-bold appearance-none"
-              >
-                <option value="ALL">TODOS ...</option>
-                <option value="ISSUED">EMITIDAS</option>
-                <option value="CANCELLED">CANCELADAS</option>
-              </select>
             </div>
           </div>
         </div>

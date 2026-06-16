@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Plus, X, Loader2, Download, ArrowLeft } from "lucide-react";
+import { Plus, X, Loader2, Download, ArrowLeft, ChevronDown } from "lucide-react";
 import { Invoice, InvoiceItem } from "@/lib/types/models";
 
 interface ProductMock {
@@ -294,41 +294,50 @@ export function InvoiceModal({
         <div className="space-y-4 mb-6">
           <div className="space-y-1">
             <label className="text-[10px] font-bold uppercase tracking-widest text-slate-700">Nombre de Cliente</label>
-            <select
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              className="koara-input-field"
-            >
-              {MOCK_CLIENTS.map((c) => (
-                <option key={c.id} value={c.name}>{c.name}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                className="koara-input-field appearance-none pr-10"
+              >
+                {MOCK_CLIENTS.map((c) => (
+                  <option key={c.id} value={c.name}>{c.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            </div>
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold uppercase tracking-widest text-slate-700">Vendedor</label>
-            <select
-              value={vendorName}
-              onChange={(e) => setVendorName(e.target.value)}
-              className="koara-input-field"
-            >
-              {MOCK_VENDORS.map((v) => (
-                <option key={v.id} value={v.name}>{v.name}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={vendorName}
+                onChange={(e) => setVendorName(e.target.value)}
+                className="koara-input-field appearance-none pr-10"
+              >
+                {MOCK_VENDORS.map((v) => (
+                  <option key={v.id} value={v.name}>{v.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            </div>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl border-2 border-slate-900 p-4 mb-6">
           <div className="flex gap-3 mb-2">
-            <select
-              value={selectedProductId}
-              onChange={(e) => setSelectedProductId(e.target.value)}
-              className="flex-1 bg-white border-2 border-slate-900 rounded-xl px-4 py-2 font-bold text-sm outline-none"
-            >
-              {MOCK_PRODUCTS.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+            <div className="relative flex-1">
+              <select
+                value={selectedProductId}
+                onChange={(e) => setSelectedProductId(e.target.value)}
+                className="w-full bg-white border-2 border-slate-900 rounded-xl px-4 py-2 font-bold text-sm outline-none appearance-none pr-10"
+              >
+                {MOCK_PRODUCTS.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            </div>
             <input
               type="number"
               min="1"
