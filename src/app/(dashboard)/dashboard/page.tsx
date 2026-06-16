@@ -80,9 +80,8 @@ export default function Dashboard() {
     );
   }
 
-  // Purely mapping the data arrays coming straight out of the API payload
   const formattedTopProducts = metrics.bestSellingProducts.map((p) => ({
-    src: p.image || "/placeholder.svg", // Using the directly provided image asset route/url from the API
+    src: p.image || "/placeholder.svg", 
     name: p.name,
     category: "Serums", 
     code: p.code
@@ -190,7 +189,7 @@ export default function Dashboard() {
               </span>
               <h2 className="mt-5 text-2xl font-bold text-foreground">Nuestra misión</h2>
               <p className="mt-3 text-pretty text-sm leading-relaxed text-foreground/80">
-                Hacer que la gestión de productos de cuidado de la piel de alta calidad, respaldados por la ciencia, sea sencilla y accesible para todos nuestros clientes, combinando herramientas elegantes con las marcas que más les gustan.
+                Ofrecer productos de skincare coreano 100 % originales y de alta calidad, cuidadosamente seleccionados, brindando una experiencia de compra confiable, cercana y educativa. Koara busca acompañar a sus clientes en el cuidado consciente de la piel mediante asesoría personalizada, transparencia y un servicio enfocado en la satisfacción y confianza del consumidor.
               </p>
             </div>
             <div className="flex flex-col rounded-3xl bg-white p-8 shadow-sm">
@@ -199,7 +198,7 @@ export default function Dashboard() {
               </span>
               <h2 className="mt-5 text-2xl font-bold text-foreground">Nuestra visión</h2>
               <p className="mt-3 text-pretty text-sm leading-relaxed text-muted-foreground">
-                Un mundo donde la piel radiante se potencia mediante una gestión inteligente y atractiva, ayudando a cada socio de Koara a crecer con confianza.
+                Convertirse en la marca referente de skincare coreano en Honduras, reconocida por su autenticidad, innovación y compromiso con el bienestar de la piel, logrando una sólida presencia digital y física que permita acercar la calidad y los beneficios del cuidado coreano a un mayor número de personas en el país.
               </p>
             </div>
           </div>

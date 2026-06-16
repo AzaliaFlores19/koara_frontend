@@ -31,7 +31,6 @@ export default function Login() {
     setError(null);
 
     try {
-      // 1. Ejecuta la petición Axios procesada por nuestro interceptor simulado
       const response =
       await authApi.login(
         formData.email,
@@ -50,12 +49,13 @@ export default function Login() {
 
 router.push("/dashboard");
     } catch (err: any) {
-      //console.error("Login failure connection log:", err);
-      // El condicional extrae de manera exacta los mensajes personalizados que inyectamos arriba
+      //console.error("Login error:", err);
+      
       setError(
         err?.response?.data?.message ||
           "Credenciales de correo electrónico inválidas o pérdida de comunicación con el servidor del sistema.",
       );
+      
     } finally {
       setLoading(false);
     }

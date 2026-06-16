@@ -23,9 +23,8 @@ apiClient.interceptors.request.use(
         const authHeader = `Bearer ${token}`;
         config.headers = config.headers || {};
 
-        // @ts-ignore
         if (config.headers.set) {
-          // @ts-ignore
+          
           config.headers.set('Authorization', authHeader);
         } else {
           (config.headers as any)['Authorization'] = authHeader;
@@ -40,6 +39,8 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Manejo global de errores de red (servidor caído)
+    
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
         clearAuth();

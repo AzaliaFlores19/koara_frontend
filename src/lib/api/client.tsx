@@ -282,10 +282,7 @@ if (url.includes("auth/forgot-password")) {
           todaySales: { current: "$1,240.00", yesterday: "$980.00", thisMonth: "$24,500.00" },
           invoices: { emitted: 48, paid: 42 }
         },
-        status: 200,
-        statusText: "OK",
-        headers: config.headers,
-        config,
+        status: 200, statusText: "OK", headers: config.headers, config,
       });
     }
 
