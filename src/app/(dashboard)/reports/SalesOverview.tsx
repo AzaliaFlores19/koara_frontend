@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/layout";
+import SalesTab from "./Sales";
 
 const TABS = ["Sales Overview", "Best Sellers", "Sales", "Frequent Shoppers"];
 
@@ -94,13 +95,6 @@ function BestSellersTab() {
   );
 }
 
-function SalesTab() {
-  return (
-    <div className="flex items-center justify-center flex-1 text-gray-400 text-sm">
-      Sales — próximamente
-    </div>
-  );
-}
 
 function FrequentShoppersTab() {
   return (
