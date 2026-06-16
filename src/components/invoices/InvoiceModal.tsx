@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Plus, X, Loader2 } from "lucide-react";
+import { Plus, X, Loader2, Download, ArrowLeft } from "lucide-react";
 import { Invoice, InvoiceItem } from "@/lib/types/models";
 
 interface ProductMock {
@@ -17,6 +17,19 @@ const MOCK_PRODUCTS: ProductMock[] = [
   { id: "p4", name: "Sun Shield", price: 320 },
 ];
 
+const MOCK_CLIENTS = [
+  { id: "c1", name: "Juan Pérez" },
+  { id: "c2", name: "María Rodríguez" },
+  { id: "c3", name: "Carlos López" },
+  { id: "c4", name: "Ana Martínez" },
+];
+
+const MOCK_VENDORS = [
+  { id: "v1", name: "Admin User" },
+  { id: "v2", name: "Store Manager" },
+  { id: "v3", name: "Sales Rep" },
+];
+
 interface InvoiceModalProps {
   isOpen: boolean;
   mode: "create" | "view" | "preview";
@@ -24,6 +37,7 @@ interface InvoiceModalProps {
   onClose: () => void;
   onConfirm: (data: Partial<Invoice>) => void;
   onNext?: (data: Partial<Invoice>) => void;
+  onBack?: () => void;
   isSubmitting?: boolean;
 }
 
@@ -34,6 +48,7 @@ export function InvoiceModal({
   onClose,
   onConfirm,
   onNext,
+  onBack,
   isSubmitting = false,
 }: InvoiceModalProps) {
   const [clientName, setClientName] = useState(invoice?.client_name || "");
@@ -42,8 +57,8 @@ export function InvoiceModal({
 
   useEffect(() => {
     if (isOpen) {
-      setClientName(invoice?.client_name || "");
-      setVendorName(invoice?.vendor_name || "");
+      setClientName(invoice?.client_name || MOCK_CLIENTS[0].name);
+      setVendorName(invoice?.vendor_name || MOCK_VENDORS[0].name);
       setItems(invoice?.invoice_items || []);
     }
   }, [isOpen, invoice]);
@@ -58,6 +73,19 @@ export function InvoiceModal({
   // Create mode state
   const [selectedProductId, setSelectedProductId] = useState(MOCK_PRODUCTS[0].id);
   const [quantity, setQuantity] = useState(1);
+  const [localMode, setLocalMode] = useState<"create" | "view" | "preview">(mode);
+
+  useEffect(() => {
+    setLocalMode(mode);
+  }, [mode]);
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      setLocalMode("create");
+    }
+  };
 
   const subtotal = useMemo(() => {
     return items.reduce((acc, item) => acc + (item.unit_price || 0) * (item.quantity || 0), 0);
@@ -97,11 +125,16 @@ export function InvoiceModal({
   if (!isOpen) return null;
 
   const renderContent = () => {
-    if (mode === "view" && invoice) {
+    if (localMode === "view" && invoice) {
       const date = new Date(invoice.created_at);
       return (
         <>
-          <h2 className="text-2xl font-bold mb-6 text-black">Ver Factura</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-black">Ver Factura</h2>
+            <button onClick={onClose} className="p-2 -mr-2 rounded-full hover:bg-slate-200 transition-colors">
+              <X size={20} className="text-black" />
+            </button>
+          </div>
           
           <div className="bg-[#F4B8D4] rounded-2xl p-6 border-2 border-slate-900 mb-6 space-y-4">
             <div className="flex justify-between">
@@ -157,18 +190,32 @@ export function InvoiceModal({
             </div>
           </div>
 
-          <button onClick={onClose} className="koara-btn-pink w-full py-4 text-slate-700">
-            Cerrar
+          <button onClick={onClose} className="koara-btn-pink w-full py-4 text-slate-700 flex items-center justify-center gap-2">
+            <Download size={18} />
+            Descargar
           </button>
         </>
       );
     }
 
-    if(mode === "preview" && invoice) {
+    if(localMode === "preview" && invoice) {
       const date = new Date(invoice.created_at);
       return (
         <>
-          <h2 className="text-2xl font-bold mb-6 text-black">Vista Previa de Factura</h2>
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleBack}
+                className="p-2 -ml-2 rounded-full hover:bg-slate-200 transition-colors"
+              >
+                <ArrowLeft size={18} className="text-black" />
+              </button>
+              <h2 className="text-2xl font-bold text-black">Vista Previa de Factura</h2>
+            </div>
+            <button onClick={onClose} className="p-2 -mr-2 rounded-full hover:bg-slate-200 transition-colors">
+              <X size={20} className="text-black" />
+            </button>
+          </div>
           
           <div className="bg-[#F4B8D4] rounded-2xl p-6 border-2 border-slate-900 mb-6 space-y-4">
             <div className="flex justify-between">
@@ -225,8 +272,9 @@ export function InvoiceModal({
           </div>
 
           <div className="flex gap-4 pb-2">
-            <button onClick={onClose} className="koara-btn-cancel py-4">
-              Cancelar
+            <button className="koara-btn-pink py-4 flex items-center justify-center gap-2 flex-1">
+              <Download size={18} />
+              Descargar
             </button>
             <button
               onClick={() => onConfirm({ client_name: clientName, vendor_name: vendorName, subtotal, taxes: isv, total, invoice_items: items as InvoiceItem[] })}
@@ -246,23 +294,27 @@ export function InvoiceModal({
         <div className="space-y-4 mb-6">
           <div className="space-y-1">
             <label className="text-[10px] font-bold uppercase tracking-widest text-slate-700">Nombre de Cliente</label>
-            <input
-              type="text"
+            <select
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
               className="koara-input-field"
-              placeholder="Nombre del Cliente"
-            />
+            >
+              {MOCK_CLIENTS.map((c) => (
+                <option key={c.id} value={c.name}>{c.name}</option>
+              ))}
+            </select>
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold uppercase tracking-widest text-slate-700">Vendedor</label>
-            <input
-              type="text"
+            <select
               value={vendorName}
               onChange={(e) => setVendorName(e.target.value)}
               className="koara-input-field"
-              placeholder="Nombre del Vendedor"
-            />
+            >
+              {MOCK_VENDORS.map((v) => (
+                <option key={v.id} value={v.name}>{v.name}</option>
+              ))}
+            </select>
           </div>
         </div>
 

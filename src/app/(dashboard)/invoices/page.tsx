@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Plus, ChevronDown, Loader2, Eye } from "lucide-react";
+import { Search, Plus, ChevronDown, Loader2, Eye, Download } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
 import { Table } from "@/components/Table";
 import { Invoice } from "@/lib/types/models";
@@ -63,6 +63,10 @@ export default function InvoicesPage() {
   const handleNextToPreview = (data: Partial<Invoice>) => {
     setSelectedInvoice(data as Invoice);
     setModalMode("preview");
+  };
+
+  const handleBackToCreate = () => {
+    setModalMode("create");
   };
 
   const handleConfirmInvoice = async (data: Partial<Invoice>) => {
@@ -160,20 +164,6 @@ export default function InvoicesPage() {
       ),
     },
     {
-      header: "Estado",
-      render: (invoice: Invoice) => (
-        <span
-          className={`inline-block px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-            invoice.status === "ISSUED" 
-              ? "bg-[#DCFCE7] text-[#16A34A]" 
-              : "bg-[#FEE2E2] text-[#EF4444]"
-          }`}
-        >
-          {invoice.status === "ISSUED" ? "EMITIDA" : "CANCELADA"}
-        </span>
-      ),
-    },
-    {
       header: "Acciones",
       render: (invoice: Invoice, { openConfirm }: any) => (
         <div className="flex items-center justify-end gap-2">
@@ -183,6 +173,12 @@ export default function InvoicesPage() {
             aria-label="Ver factura"
           >
             <Eye size={14} />
+          </button>
+          <button
+            className="koara-icon-btn"
+            aria-label="Descargar factura"
+          >
+            <Download size={14} />
           </button>
         </div>
       ),
@@ -266,6 +262,7 @@ export default function InvoicesPage() {
           onClose={handleCloseModal}
           onConfirm={handleConfirmInvoice}
           onNext={handleNextToPreview}
+          onBack={handleBackToCreate}
           isSubmitting={isSubmitting}
         />
 
