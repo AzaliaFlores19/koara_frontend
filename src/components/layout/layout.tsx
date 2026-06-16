@@ -37,7 +37,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
     }
   }, [pathname]); 
 
-  const isAdmin = userData?.role === "ADMIN";
+  const isAdmin = checkIsAdmin();
   const navItems = allNavItems.filter((item) => !item.adminOnly || isAdmin);
 
   const currentItem = allNavItems.find(item => item.path === pathname);
