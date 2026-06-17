@@ -23,6 +23,7 @@ export interface CreateProductDto {
   stock: number;
   min_stock?: number;
   price: number;
+  image?: string;
 }
 
 export interface UpdateProductDto extends Partial<CreateProductDto> {}
@@ -38,6 +39,7 @@ function mapToProduct(p: ApiProduct, index: number): Product {
     price: parseFloat(p.price),
     category: p.category?.name ?? "",
     imageColor: CARD_COLORS[index % CARD_COLORS.length],
+    image: p.image ?? undefined,
   };
 }
 

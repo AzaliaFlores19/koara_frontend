@@ -16,10 +16,10 @@ import { productsApi } from "@/services/products.service";
 import { categoriesApi, type Category } from "@/services/categories.service";
 
 const EMPTY_FORM: ProductFormData = {
-  name: "", code: "", description: "", price: "", stock: "", minStock: "", category: "",
+  name: "", code: "", description: "", price: "", stock: "", minStock: "", category: "", image: "",
 };
 
-const PRODUCTS_PER_PAGE = 8;
+const PRODUCTS_PER_PAGE = 12;
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -108,9 +108,9 @@ export default function ProductsPage() {
       await fetchCategories();
       setShowAddCategory(false);
       setShowManageCategories(true);
-      showToast("Category added successfully.");
+      showToast("Categoría agregada exitosamente.");
     } catch {
-      showToast("Error adding category.");
+      showToast("Error al agregar la categoría.");
     }
   };
 
@@ -124,9 +124,9 @@ export default function ProductsPage() {
       if (activeCategory === editingCategory) setActiveCategory(newName);
       setEditingCategory(null);
       setShowManageCategories(true);
-      showToast("Category updated successfully.");
+      showToast("Categoría actualizada exitosamente.");
     } catch {
-      showToast("Error updating category.");
+      showToast("Error al actualizar la categoría.");
     }
   };
 
@@ -140,9 +140,9 @@ export default function ProductsPage() {
       if (activeCategory === deletingCategory) setActiveCategory(null);
       setDeletingCategory(null);
       setShowManageCategories(true);
-      showToast("Category deleted successfully.");
+      showToast("Categoría eliminada exitosamente.");
     } catch {
-      showToast("Error deleting category.");
+      showToast("Error al eliminar la categoría.");
     }
   };
 
@@ -163,6 +163,7 @@ export default function ProductsPage() {
       stock: product.stock.toString(),
       minStock: product.minStock?.toString() ?? "",
       category: product.category,
+      image: product.image ?? "",
     });
     setSelectedId(product.id);
     setIsModalOpen(true);
@@ -180,7 +181,7 @@ export default function ProductsPage() {
     try {
       const categoryId = apiCategories.find((c) => c.name === formData.category)?.id;
       if (!categoryId) {
-        showToast("Please select a valid category.");
+        showToast("Selecciona una categoría válida.");
         setIsSubmitting(false);
         return;
       }
@@ -193,20 +194,21 @@ export default function ProductsPage() {
         stock: parseInt(formData.stock),
         min_stock: formData.minStock ? parseInt(formData.minStock) : undefined,
         price: parseFloat(formData.price),
+        image: formData.image || undefined,
       };
 
       if (modalMode === "add") {
         await productsApi.create(dto);
-        showToast("Product added successfully.");
+        showToast("Producto agregado exitosamente.");
       } else if (selectedId) {
         await productsApi.update(selectedId, dto);
-        showToast("Product edited successfully.");
+        showToast("Producto editado exitosamente.");
       }
 
       handleCloseModal();
       await fetchProducts();
     } catch {
-      showToast("Error saving product.");
+      showToast("Error al guardar el producto.");
     } finally {
       setIsSubmitting(false);
     }
@@ -214,15 +216,15 @@ export default function ProductsPage() {
 
   const handleDelete = (product: Product) => {
     setConfirmData({
-      message: `Are you sure you want to delete "${product.name}"? This action cannot be undone.`,
+      message: `¿Estás seguro de que deseas eliminar "${product.name}"? Esta acción no se puede deshacer.`,
       onConfirm: async () => {
         try {
           await productsApi.deactivate(product.id);
           setConfirmData(null);
-          showToast("Product deleted successfully.");
+          showToast("Producto eliminado exitosamente.");
           await fetchProducts();
         } catch {
-          showToast("Error deleting product.");
+          showToast("Error al eliminar el producto.");
           setConfirmData(null);
         }
       },
@@ -237,17 +239,17 @@ export default function ProductsPage() {
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 flex flex-col gap-6">
 
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold">Product List</h1>
+            <h1 className="text-xl font-semibold">Lista de Productos</h1>
             <div className="flex items-center gap-2">
               <button onClick={handleOpenAddModal} className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors">
                 <Plus size={15} />
-                Add Product
+                Agregar Producto
               </button>
               <button
                 onClick={() => setShowManageCategories(true)}
                 className="px-4 py-2 bg-white text-black text-sm font-medium rounded-full border border-black hover:bg-gray-50 transition-colors"
               >
-                Manage Category
+                Gestionar Categorías
               </button>
             </div>
           </div>
@@ -257,7 +259,7 @@ export default function ProductsPage() {
               <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search Product"
+                placeholder="Buscar producto"
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-white rounded-full text-sm border border-black focus:outline-none focus:ring-2 focus:ring-koara-primary placeholder:text-gray-400"
@@ -269,7 +271,7 @@ export default function ProductsPage() {
                 onClick={() => setDropdownOpen((o) => !o)}
                 className="flex items-center gap-2 px-4 py-2.5 bg-white text-black text-sm font-medium rounded-full border border-black/20 hover:bg-gray-100 transition-colors whitespace-nowrap"
               >
-                {activeCategory ?? "Category"}
+                {activeCategory ?? "Categoría"}
                 <ChevronDown size={14} className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
               </button>
 
@@ -281,7 +283,7 @@ export default function ProductsPage() {
                       activeCategory === null ? "font-semibold bg-koara-primary/30" : "hover:bg-gray-50"
                     }`}
                   >
-                    All
+                    Todas
                   </button>
                   {categoryNames.map((cat) => (
                     <button
@@ -300,9 +302,9 @@ export default function ProductsPage() {
           </div>
 
           {isLoading ? (
-            <p className="text-center text-gray-400 py-16">Loading products...</p>
+            <p className="text-center text-gray-400 py-16">Cargando productos...</p>
           ) : products.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
               {products.map((product) => (
                 <ProductCard
                   key={product.id}
@@ -313,7 +315,7 @@ export default function ProductsPage() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-gray-500 py-16">No products found.</p>
+            <p className="text-center text-gray-500 py-16">No se encontraron productos.</p>
           )}
 
           {totalPages > 1 && (

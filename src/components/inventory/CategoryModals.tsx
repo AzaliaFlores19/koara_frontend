@@ -27,16 +27,16 @@ export function ManageCategoriesModal({
       />
       <div className="koara-modal-card animate-koara-modal">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-black">Manage Categories</h2>
+          <h2 className="text-2xl font-bold text-black">Gestionar Categorías</h2>
           <button onClick={onAdd} className="koara-btn-black">
             <Plus size={15} />
-            Add
+            Agregar
           </button>
         </div>
 
         <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto mb-6 no-scrollbar">
           {categories.length === 0 && (
-            <p className="col-span-2 text-sm text-gray-400 text-center py-6">No categories yet.</p>
+            <p className="col-span-2 text-sm text-gray-400 text-center py-6">No hay categorías aún.</p>
           )}
           {categories.map((cat) => (
             <div
@@ -61,7 +61,7 @@ export function ManageCategoriesModal({
             onClick={onClose}
             className="w-full px-6 py-3 rounded-full font-black text-sm text-slate-700 bg-[#e3c5d1] border-2 border-transparent hover:border-slate-200 transition-all active:translate-y-0.5"
           >
-            Close
+            Cerrar
           </button>
         </div>
       </div>
@@ -102,16 +102,16 @@ export function CategoryFormModal({
       />
       <div className="koara-modal-card animate-koara-modal">
         <h2 className="text-2xl font-bold mb-6 text-black">
-          {mode === "add" ? "Add Category" : "Edit Category"}
+          {mode === "add" ? "Agregar Categoría" : "Editar Categoría"}
         </h2>
 
         <div className="space-y-1.5 mb-6">
           <label className="text-xs font-bold text-black uppercase tracking-wider">
-            Category Name
+            Nombre de Categoría
           </label>
           <input
             type="text"
-            placeholder="e.g. Serum, Cream, Mist..."
+            placeholder="Ej. Serum, Crema, Mist..."
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleConfirm(); }}
@@ -122,14 +122,14 @@ export function CategoryFormModal({
 
         <div className="flex gap-4">
           <button type="button" onClick={onClose} className="koara-btn-cancel">
-            Cancel
+            Cancelar
           </button>
           <button
             onClick={handleConfirm}
             disabled={isSubmitting || !value.trim()}
             className="koara-btn-pink"
           >
-            {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : "Confirm"}
+            {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : "Confirmar"}
           </button>
         </div>
       </div>
@@ -152,20 +152,20 @@ export function ConfirmDeleteModal({ onClose, onConfirm }: ConfirmDeleteModalPro
       />
       <div className="koara-modal-card animate-koara-modal mx-4">
         <p className="font-bold text-slate-700 mb-8">
-          Are you sure you want to delete this category? This action cannot be undone.
+          ¿Estás seguro de que deseas eliminar esta categoría? Esta acción no se puede deshacer.
         </p>
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
             className="px-6 py-3 rounded-full font-black text-sm text-slate-700 bg-[#e3c5d1] border-2 border-transparent hover:border-slate-200 transition-all active:translate-y-0.5"
           >
-            Cancel
+            Cancelar
           </button>
           <button
             onClick={onConfirm}
             className="px-6 py-3 rounded-full font-black text-sm text-white bg-[#703A61] border-2 border-slate-200 hover:-translate-y-0.5 transition-all active:translate-y-0"
           >
-            Confirm
+            Confirmar
           </button>
         </div>
       </div>
