@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, LogOut, Loader2, Eye, EyeOff, Edit2, X, CheckCircle2, AlertTriangle } from "lucide-react";
 import { AxiosError } from "axios";
-import { usersApi } from "@/services/users.service";
+import { usersApi } from "@/services/users";
 import ProfileLayout from "@/components/layout/layout";
 import { clearAuth } from "@/lib/api/auth.api";
 

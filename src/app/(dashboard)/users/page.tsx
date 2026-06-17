@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Plus, Pencil, Trash2, Shield, Loader2 } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
-import { usersApi } from "@/lib/api/users";
+import { usersApi } from "@/services/users";
 import { User } from "@/lib/api/auth";
 import { UserModal } from "@/components/users/UserModal";
 import { Table } from "@/components/Table";
