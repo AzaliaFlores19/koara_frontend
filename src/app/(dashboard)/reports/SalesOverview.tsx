@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { CheckCircle } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
 import { reportsApi, type AnalyticsData } from "@/services/reports.service";
+import BestSellersTab from "./BestSellers";
 
 const TABS = ["Resumen de Ventas", "Más Vendidos", "Ventas", "Clientes Frecuentes"];
 
@@ -147,13 +148,6 @@ function SalesOverviewTab() {
   );
 }
 
-function BestSellersTab() {
-  return (
-    <div className="flex items-center justify-center flex-1 text-gray-400 text-sm">
-      Más Vendidos — próximamente
-    </div>
-  );
-}
 
 function SalesTab() {
   return (
