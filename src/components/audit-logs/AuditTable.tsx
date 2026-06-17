@@ -40,6 +40,21 @@ export function AuditTable({ data, itemsPerPage = 10 }: AuditTableProps) {
     }
   };
 
+  const translateEntity = (entity: AuditLog["entity"]) => {
+    const translations: Record<string, string> = {
+      CATEGORY: "CATEGORÍA",
+      USERS: "USUARIOS",
+      PRODUCTS: "PRODUCTOS",
+      INVOICES: "FACTURAS",
+      INVOICE_PRODUCTS: "PRODUCTOS DE FACTURA",
+      CLIENTS: "CLIENTES",
+      CAI: "CAI",
+      CAI_RANGE: "RANGO CAI",
+      COMPANY: "EMPRESA",
+    };
+    return translations[entity] || entity;
+  };
+
   const getActionStyles = (action: AuditLog["action"]) => {
     switch (action) {
       case "UPDATE": return "bg-[#DBEAFE] text-[#1D4ED8] border-[#1D4ED8]/10";
@@ -49,6 +64,17 @@ export function AuditTable({ data, itemsPerPage = 10 }: AuditTableProps) {
       case "LOGOUT": return "bg-[#F1F5F9] text-[#334155] border-[#334155]/10";
       default: return "bg-gray-100 text-gray-600";
     }
+  };
+
+  const translateAction = (action: AuditLog["action"]) => {
+    const translations: Record<string, string> = {
+      CREATE: "CREAR",
+      UPDATE: "ACTUALIZAR",
+      DEACTIVATE: "DESACTIVAR",
+      LOGIN: "INICIO SESIÓN",
+      LOGOUT: "CIERRE SESIÓN",
+    };
+    return translations[action] || action;
   };
 
   const formatDate = (dateString: string) => {
@@ -69,11 +95,11 @@ export function AuditTable({ data, itemsPerPage = 10 }: AuditTableProps) {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#f4b8d4]">
-                <th className="px-8 py-5 text-sm font-bold text-black border-r border-black/10">User</th>
-                <th className="px-8 py-5 text-sm font-bold text-black border-r border-black/10">Entity</th>
-                <th className="px-8 py-5 text-sm font-bold text-black border-r border-black/10">Action</th>
-                <th className="px-8 py-5 text-sm font-bold text-black border-r border-black/10">Reference</th>
-                <th className="px-8 py-5 text-sm font-bold text-black">Date</th>
+                <th className="px-8 py-5 text-sm font-bold text-black border-r border-black/10">Usuario</th>
+                <th className="px-8 py-5 text-sm font-bold text-black border-r border-black/10">Entidad</th>
+                <th className="px-8 py-5 text-sm font-bold text-black border-r border-black/10">Acción</th>
+                <th className="px-8 py-5 text-sm font-bold text-black border-r border-black/10">Referencia</th>
+                <th className="px-8 py-5 text-sm font-bold text-black">Fecha</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -81,16 +107,16 @@ export function AuditTable({ data, itemsPerPage = 10 }: AuditTableProps) {
                 paginatedData.map((log) => (
                   <tr key={log.id} className="group hover:bg-[#F6DEEB]/30 transition-all duration-200">
                     <td className="px-8 py-5 border-r border-slate-100">
-                      <span className="font-bold text-slate-900 text-sm">{log.user?.name || 'Unknown'}</span>
+                      <span className="font-bold text-slate-900 text-sm">{log.user?.name || 'Desconocido'}</span>
                     </td>
                     <td className="px-8 py-5 border-r border-slate-100 text-center">
                       <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest border-2 ${getEntityStyles(log.entity)}`}>
-                        {log.entity}
+                        {translateEntity(log.entity)}
                       </span>
                     </td>
                     <td className="px-8 py-5 border-r border-slate-100 text-center">
                       <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest border-2 ${getActionStyles(log.action)}`}>
-                        {log.action}
+                        {translateAction(log.action)}
                       </span>
                     </td>
                     <td className="px-8 py-5 border-r border-slate-100">
@@ -104,7 +130,7 @@ export function AuditTable({ data, itemsPerPage = 10 }: AuditTableProps) {
               ) : (
                 <tr>
                   <td colSpan={5} className="px-6 py-20 text-center">
-                    <p className="text-sm font-bold text-slate-500 uppercase tracking-widest opacity-40">No logs found</p>
+                    <p className="text-sm font-bold text-slate-500 uppercase tracking-widest opacity-40">No se encontraron registros</p>
                   </td>
                 </tr>
               )}

@@ -17,10 +17,30 @@ export default function AuditLogsPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter states
-  const [filterUser, setFilterUser] = useState("All Users");
-  const [filterEntity, setFilterEntity] = useState("All Entities");
-  const [filterAction, setFilterAction] = useState("All Actions");
+  const [filterUser, setFilterUser] = useState("Todos los Usuarios");
+  const [filterEntity, setFilterEntity] = useState("Todas las Entidades");
+  const [filterAction, setFilterAction] = useState("Todas las Acciones");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
+
+  const entityMapping: Record<string, AuditEntity> = {
+    "CATEGORÍA": AuditEntity.CATEGORY,
+    "USUARIOS": AuditEntity.USERS,
+    "PRODUCTOS": AuditEntity.PRODUCTS,
+    "FACTURAS": AuditEntity.INVOICES,
+    "PRODUCTOS DE FACTURA": AuditEntity.INVOICE_PRODUCTS,
+    "CLIENTES": AuditEntity.CLIENTS,
+    "CAI": AuditEntity.CAI,
+    "RANGO CAI": AuditEntity.CAI_RANGE,
+    "EMPRESA": AuditEntity.COMPANY,
+  };
+
+  const actionMapping: Record<string, AuditAction> = {
+    "CREAR": AuditAction.CREATE,
+    "ACTUALIZAR": AuditAction.UPDATE,
+    "DESACTIVAR": AuditAction.DEACTIVATE,
+    "INICIO SESIÓN": AuditAction.LOGIN,
+    "CIERRE SESIÓN": AuditAction.LOGOUT,
+  };
 
   const fetchLogs = useCallback(async () => {
     try {
@@ -28,8 +48,8 @@ export default function AuditLogsPage() {
       const selectedUser = users.find(u => u.name === filterUser);
       const filters = {
         userId: selectedUser?.id,
-        entity: filterEntity === "All Entities" ? undefined : filterEntity as AuditEntity,
-        action: filterAction === "All Actions" ? undefined : filterAction as AuditAction,
+        entity: entityMapping[filterEntity],
+        action: actionMapping[filterAction],
         startDate: dateRange.start || undefined,
         endDate: dateRange.end || undefined,
       };
@@ -66,9 +86,9 @@ export default function AuditLogsPage() {
     return matchesSearch;
   });
 
-  const userOptions = ["All Users", ...users.map(u => u.name)];
-  const entityOptions = ["All Entities", ...Object.values(AuditEntity)];
-  const actionOptions = ["All Actions", ...Object.values(AuditAction)];
+  const userOptions = ["Todos los Usuarios", ...users.map(u => u.name)];
+  const entityOptions = ["Todas las Entidades", ...Object.keys(entityMapping)];
+  const actionOptions = ["Todas las Acciones", ...Object.keys(actionMapping)];
 
   if (loading && logs.length === 0) {
     return (
@@ -92,7 +112,7 @@ export default function AuditLogsPage() {
           />
           <input
             type="text"
-            placeholder="Search logs by user or ID..."
+            placeholder="Buscar registros por usuario o ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="koara-input !pl-12 !py-3 !text-base shadow-sm w-full"

@@ -19,7 +19,7 @@ export function DateRangePicker({ start, end, onChange, className = "" }: DateRa
         />
       </div>
 
-      <span className="text-slate-400 font-black text-[10px] uppercase tracking-widest shrink-0">to</span>
+      <span className="text-slate-400 font-black text-xs uppercase tracking-widest">hasta</span>
 
       <div className="relative flex-1">
         <input
