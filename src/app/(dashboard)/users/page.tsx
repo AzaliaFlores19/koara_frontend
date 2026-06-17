@@ -24,14 +24,12 @@ export default function UsersPage() {
     name: string;
     email: string;
     role: User["role"];
-    base_code: string;
     password?: string;
     phone?: string;
   }>({
     name: "",
     email: "",
     role: "EMPLOYEE",
-    base_code: "",
     password: "",
     phone: "",
   });
@@ -64,7 +62,7 @@ export default function UsersPage() {
 
   const handleOpenAddModal = () => {
     setModalMode("add");
-    setFormData({ name: "", email: "", role: "EMPLOYEE", base_code: "", password: "", phone: "" });
+    setFormData({ name: "", email: "", role: "EMPLOYEE", password: "", phone: "" });
     setSelectedUserId(null);
     setIsModalOpen(true);
   };
@@ -75,7 +73,6 @@ export default function UsersPage() {
       name: user.name, 
       email: user.email, 
       role: user.role, 
-      base_code: user.base_code || "",
       phone: user.phone || ""
     });
     setSelectedUserId(user.id);
@@ -84,7 +81,7 @@ export default function UsersPage() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setFormData({ name: "", email: "", role: "EMPLOYEE", base_code: "", password: "", phone: "" });
+    setFormData({ name: "", email: "", role: "EMPLOYEE", password: "", phone: "" });
     setSelectedUserId(null);
   };
 
@@ -97,7 +94,6 @@ export default function UsersPage() {
           name: formData.name,
           email: formData.email,
           role: formData.role,
-          base_code: formData.base_code,
           password: formData.password,
           phone: formData.phone,
         });
@@ -106,7 +102,6 @@ export default function UsersPage() {
           name: formData.name,
           email: formData.email,
           role: formData.role,
-          base_code: formData.base_code,
           phone: formData.phone,
         });
       }
@@ -134,8 +129,7 @@ export default function UsersPage() {
   const filteredUsers = Array.isArray(users) ? users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.base_code?.toLowerCase().includes(searchQuery.toLowerCase()),
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) 
   ) : [];
 
   const columns = [
@@ -154,12 +148,6 @@ export default function UsersPage() {
       header: "Email",
       render: (user: User) => (
         <span className="text-sm text-gray-500">{user.email}</span>
-      ),
-    },
-    {
-      header: "Base Code",
-      render: (user: User) => (
-        <span className="text-sm font-mono text-koara-dark">{user.base_code || "N/A"}</span>
       ),
     },
     {

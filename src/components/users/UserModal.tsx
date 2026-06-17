@@ -6,8 +6,8 @@ import { User } from "@/lib/api/auth";
 interface UserModalProps {
   isOpen: boolean;
   mode: "add" | "edit";
-  formData: { name: string; email: string; role: User["role"]; base_code: string; password?: string; phone?: string };
-  setFormData: (data: { name: string; email: string; role: User["role"]; base_code: string; password?: string; phone?: string }) => void;
+  formData: { name: string; email: string; role: User["role"]; password?: string; phone?: string };
+  setFormData: (data: { name: string; email: string; role: User["role"]; password?: string; phone?: string }) => void;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
   isSubmitting: boolean;
@@ -71,18 +71,6 @@ export function UserModal({
                 placeholder="e.g. 9999-9999"
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-black uppercase tracking-wider">Base Code (Required)</label>
-            <input
-              type="text"
-              required
-              value={formData.base_code}
-              onChange={(e) => setFormData({ ...formData, base_code: e.target.value })}
-              className="koara-input-field"
-              placeholder="e.g. ADM-001"
-            />
           </div>
 
           {mode === "add" && (

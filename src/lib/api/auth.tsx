@@ -6,7 +6,6 @@ export interface User {
   email: string;
   role: "ADMIN" | "EMPLOYEE";
   phone?: string;
-  base_code: string;
   is_active: boolean;
 }
 
