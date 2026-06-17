@@ -122,11 +122,14 @@ export interface Invoice {
   client_phone?: string;
   client_email?: string;
 
+  vendor_name?: string; // Added for display
+
   subtotal: number;
   taxes: number;
   total: number;
 
   payment_method: PaymentMethod;
+  status: "ISSUED" | "CANCELLED"; // Added for status
 
   created_at: string;
 
