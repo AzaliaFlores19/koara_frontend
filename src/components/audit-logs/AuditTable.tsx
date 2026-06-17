@@ -33,6 +33,9 @@ export function AuditTable({ data, itemsPerPage = 10 }: AuditTableProps) {
       case "CAI_RANGE": return "bg-[#FFE4E6] text-[#BE123C] border-[#BE123C]/10";
       case "USERS": return "bg-[#E0E7FF] text-[#4338CA] border-[#4338CA]/10";
       case "INVOICES": return "bg-[#FEF9C3] text-[#A16207] border-[#A16207]/10";
+      case "CATEGORY": return "bg-[#F0FDFA] text-[#0D9488] border-[#0D9488]/10";
+      case "CAI": return "bg-[#FFF1F2] text-[#E11D48] border-[#E11D48]/10";
+      case "COMPANY": return "bg-[#F8FAFC] text-[#475569] border-[#475569]/10";
       default: return "bg-gray-100 text-gray-600";
     }
   };
@@ -42,9 +45,21 @@ export function AuditTable({ data, itemsPerPage = 10 }: AuditTableProps) {
       case "UPDATE": return "bg-[#DBEAFE] text-[#1D4ED8] border-[#1D4ED8]/10";
       case "CREATE": return "bg-[#DCFCE7] text-[#15803D] border-[#15803D]/10";
       case "DEACTIVATE": return "bg-[#FFEDD5] text-[#C2410C] border-[#C2410C]/10";
-      case "DELETE": return "bg-[#FEE2E2] text-[#B91C1C] border-[#B91C1C]/10";
+      case "LOGIN": return "bg-[#E0F2FE] text-[#0369A1] border-[#0369A1]/10";
+      case "LOGOUT": return "bg-[#F1F5F9] text-[#334155] border-[#334155]/10";
       default: return "bg-gray-100 text-gray-600";
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-HN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -66,7 +81,7 @@ export function AuditTable({ data, itemsPerPage = 10 }: AuditTableProps) {
                 paginatedData.map((log) => (
                   <tr key={log.id} className="group hover:bg-[#F6DEEB]/30 transition-all duration-200">
                     <td className="px-8 py-5 border-r border-slate-100">
-                      <span className="font-bold text-slate-900 text-sm">{log.user}</span>
+                      <span className="font-bold text-slate-900 text-sm">{log.user?.name || 'Unknown'}</span>
                     </td>
                     <td className="px-8 py-5 border-r border-slate-100 text-center">
                       <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest border-2 ${getEntityStyles(log.entity)}`}>
@@ -79,10 +94,10 @@ export function AuditTable({ data, itemsPerPage = 10 }: AuditTableProps) {
                       </span>
                     </td>
                     <td className="px-8 py-5 border-r border-slate-100">
-                      <span className="text-sm text-slate-500 font-medium">{log.reference}</span>
+                      <span className="text-sm text-slate-500 font-medium">{log.entity_id}</span>
                     </td>
                     <td className="px-8 py-5">
-                      <span className="text-sm text-slate-400 font-bold">{log.date}</span>
+                      <span className="text-sm text-slate-400 font-bold">{formatDate(log.created_at)}</span>
                     </td>
                   </tr>
                 ))
