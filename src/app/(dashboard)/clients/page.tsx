@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState, useEffect, useCallback } from "react";
 import {
   CheckCircle2,
   History,
@@ -16,16 +16,14 @@ import {
 import DashboardLayout from "@/components/layout/layout";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import Pagination from "@/components/inventory/Pagination";
+import { clientsApi, Client } from "@/services/clients.service";
 
-type Client = {
-  id: number;
+type ClientForm = {
   name: string;
   email: string;
   phone: string;
-  rtn: string | null;
+  rtn: string;
 };
-
-type ClientForm = Omit<Client, "id">;
 
 type Notice = {
   message: string;
@@ -33,85 +31,19 @@ type Notice = {
 };
 
 type PurchaseHistoryItem = {
-  id: number;
-  invoiceNumber: string;
-  date: string;
+  id: string;
+  invoice_number: string;
+  created_at: string;
   total: number;
-  status: "Pagada" | "Pendiente";
 };
 
 type MostPurchasedProduct = {
-  id: number;
-  name: string;
-  totalSpent: number;
-  units: number;
+  product: {
+    id: string;
+    name: string;
+  };
+  total_quantity: number;
 };
-
-const INITIAL_CLIENTS: Client[] = [
-  {
-    id: 1,
-    name: "Mariana Lopez",
-    email: "mariana.lopez@email.com",
-    phone: "+504 9988-2211",
-    rtn: "08011999123456",
-  },
-  {
-    id: 2,
-    name: "Sofia Ramirez",
-    email: "sofia.ramirez@email.com",
-    phone: "+504 9450-1188",
-    rtn: null,
-  },
-  {
-    id: 3,
-    name: "Camila Torres",
-    email: "camila.torres@email.com",
-    phone: "+504 9722-4609",
-    rtn: "08011998111222",
-  },
-  {
-    id: 4,
-    name: "Valeria Cruz",
-    email: "valeria.cruz@email.com",
-    phone: "+504 9123-8765",
-    rtn: null,
-  },
-  {
-    id: 5,
-    name: "Lucia Herrera",
-    email: "lucia.herrera@email.com",
-    phone: "+504 9366-2044",
-    rtn: "08011996123400",
-  },
-  {
-    id: 6,
-    name: "Andrea Mejia",
-    email: "andrea.mejia@email.com",
-    phone: "+504 9544-8120",
-    rtn: null,
-  },
-  {
-    id: 7,
-    name: "Gabriela Flores",
-    email: "gabriela.flores@email.com",
-    phone: "+504 9881-3456",
-    rtn: "08011995006789",
-  },
-  {
-    id: 8,
-    name: "Natalia Pineda",
-    email: "natalia.pineda@email.com",
-    phone: "+504 9001-7744",
-    rtn: null,
-  },
-  {
-    id: 9,
-    name: "Daniela Reyes",
-    email: "daniela.reyes@email.com",
-    phone: "+504 9777-4510",
-    rtn: "08011997001234",
-  },
-];
 
 const EMPTY_FORM: ClientForm = {
   name: "",
@@ -123,39 +55,10 @@ const EMPTY_FORM: ClientForm = {
 const CLIENTS_PER_PAGE = 6;
 const RTN_REGEX = /^\d{14}$/;
 
-const PURCHASE_HISTORY: Record<number, PurchaseHistoryItem[]> = {
-  1: [
-    { id: 1, invoiceNumber: "FAC-001", date: "10/06/2026", total: 1280, status: "Pagada" },
-    { id: 2, invoiceNumber: "FAC-014", date: "04/06/2026", total: 640, status: "Pagada" },
-    { id: 3, invoiceNumber: "FAC-019", date: "29/05/2026", total: 420, status: "Pendiente" },
-  ],
-  2: [
-    { id: 4, invoiceNumber: "FAC-022", date: "08/06/2026", total: 850, status: "Pagada" },
-    { id: 5, invoiceNumber: "FAC-027", date: "02/06/2026", total: 310, status: "Pagada" },
-  ],
-  3: [
-    { id: 6, invoiceNumber: "FAC-031", date: "06/06/2026", total: 990, status: "Pagada" },
-  ],
-};
-
-const MOST_PURCHASED_PRODUCTS: Record<number, MostPurchasedProduct[]> = {
-  1: [
-    { id: 1, name: "Centella Ampoule", totalSpent: 540, units: 6 },
-    { id: 2, name: "Glow Serum", totalSpent: 420, units: 4 },
-    { id: 3, name: "Sun Shield", totalSpent: 320, units: 5 },
-  ],
-  2: [
-    { id: 4, name: "Velvet Cream", totalSpent: 380, units: 3 },
-    { id: 5, name: "Clean Mist", totalSpent: 180, units: 4 },
-  ],
-  3: [
-    { id: 6, name: "Repair Oil", totalSpent: 420, units: 2 },
-    { id: 7, name: "Pure Cleanser", totalSpent: 250, units: 5 },
-  ],
-};
-
 export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [totalClients, setTotalClients] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [clientModalMode, setClientModalMode] = useState<"add" | "edit">("add");
@@ -163,33 +66,87 @@ export default function ClientsPage() {
   const [formError, setFormError] = useState("");
   const [notice, setNotice] = useState<Notice | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
-  const [historyClientId, setHistoryClientId] = useState<number | null>(null);
-  const [mostPurchasedClientId, setMostPurchasedClientId] = useState<
-    number | null
-  >(null);
-  const [clientToDeleteId, setClientToDeleteId] = useState<number | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [historyClientId, setHistoryClientId] = useState<string | null>(null);
+  const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistoryItem[]>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  
+  const [mostPurchasedClientId, setMostPurchasedClientId] = useState<string | null>(null);
+  const [topProducts, setTopProducts] = useState<MostPurchasedProduct[]>([]);
+  const [isTopProductsLoading, setIsTopProductsLoading] = useState(false);
+  
+  const [clientToDeleteId, setClientToDeleteId] = useState<string | null>(null);
+
+  const fetchClients = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Backend doesn't support search yet, so we fetch all or just use pagination
+      // For now, let's fetch with pagination. 
+      const response = await clientsApi.getAll(currentPage, CLIENTS_PER_PAGE);
+      setClients(response.data);
+      setTotalClients(response.total);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      showNotice("Error al cargar clientes", "danger");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage]);
+
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
+
+  useEffect(() => {
+    if (historyClientId) {
+      const fetchHistory = async () => {
+        setIsHistoryLoading(true);
+        try {
+          const data = await clientsApi.getHistory(historyClientId);
+          setPurchaseHistory(data);
+        } catch (error) {
+          console.error("Error fetching history:", error);
+        } finally {
+          setIsHistoryLoading(false);
+        }
+      };
+      fetchHistory();
+    } else {
+      setPurchaseHistory([]);
+    }
+  }, [historyClientId]);
+
+  useEffect(() => {
+    if (mostPurchasedClientId) {
+      const fetchTopProducts = async () => {
+        setIsTopProductsLoading(true);
+        try {
+          const data = await clientsApi.getTopProducts(mostPurchasedClientId);
+          setTopProducts(data);
+        } catch (error) {
+          console.error("Error fetching top products:", error);
+        } finally {
+          setIsTopProductsLoading(false);
+        }
+      };
+      fetchTopProducts();
+    } else {
+      setTopProducts([]);
+    }
+  }, [mostPurchasedClientId]);
 
   const filteredClients = useMemo(() => {
     const query = search.trim().toLowerCase();
-
     if (!query) return clients;
 
     return clients.filter((client) =>
-      [client.name, client.email, client.phone].some((value) =>
+      [client.name, client.email || "", client.phone || ""].some((value) =>
         value.toLowerCase().includes(query),
       ),
     );
   }, [clients, search]);
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredClients.length / CLIENTS_PER_PAGE),
-  );
-  const paginatedClients = filteredClients.slice(
-    (currentPage - 1) * CLIENTS_PER_PAGE,
-    currentPage * CLIENTS_PER_PAGE,
-  );
+  const totalPages = Math.max(1, Math.ceil(totalClients / CLIENTS_PER_PAGE));
 
   const handleSearch = (value: string) => {
     setSearch(value);
@@ -222,26 +179,26 @@ export default function ClientsPage() {
     setSelectedClientId(client.id);
     setFormData({
       name: client.name,
-      email: client.email,
-      phone: client.phone,
+      email: client.email || "",
+      phone: client.phone || "",
       rtn: client.rtn ?? "",
     });
     setFormError("");
     setIsAddModalOpen(true);
   };
 
-  const handleSaveClient = (event: FormEvent<HTMLFormElement>) => {
+  const handleSaveClient = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextClient = {
       name: formData.name.trim(),
-      email: formData.email.trim(),
-      phone: formData.phone.trim(),
-      rtn: formData.rtn?.trim() || null,
+      email: formData.email.trim() || undefined,
+      phone: formData.phone.trim() || undefined,
+      rtn: formData.rtn?.trim() || undefined,
     };
 
-    if (!nextClient.name || !nextClient.email || !nextClient.phone) {
-      setFormError("Completa nombre, correo y telefono para guardar.");
+    if (!nextClient.name) {
+      setFormError("El nombre es obligatorio.");
       return;
     }
 
@@ -250,50 +207,48 @@ export default function ClientsPage() {
       return;
     }
 
-    if (clientModalMode === "edit" && selectedClientId) {
-      setClients((currentClients) =>
-        currentClients.map((client) =>
-          client.id === selectedClientId ? { ...client, ...nextClient } : client,
-        ),
-      );
+    try {
+      if (clientModalMode === "edit" && selectedClientId) {
+        await clientsApi.update(selectedClientId, nextClient);
+        showNotice("Cliente actualizado correctamente.", "success");
+      } else {
+        await clientsApi.create(nextClient as any);
+        showNotice("Cliente creado correctamente.", "success");
+      }
+      fetchClients();
       closeAddModal();
-      showNotice("Cliente actualizado correctamente.", "success");
-      return;
+    } catch (error: any) {
+      const message = error.response?.data?.message || "Error al guardar el cliente";
+      setFormError(Array.isArray(message) ? message[0] : message);
     }
-
-    setClients((currentClients) => [
-      {
-        id: Date.now(),
-        ...nextClient,
-      },
-      ...currentClients,
-    ]);
-    setCurrentPage(1);
-    closeAddModal();
-    showNotice("Cliente creado correctamente.", "success");
   };
 
-  const handleDeleteClient = (clientId: number) => {
-    setClients((currentClients) =>
-      currentClients.filter((client) => client.id !== clientId),
-    );
-    setClientToDeleteId(null);
-    showNotice("Cliente eliminado correctamente.", "danger");
+  const handleDeleteClient = async (clientId: string) => {
+    try {
+      await clientsApi.deactivate(clientId);
+      setClientToDeleteId(null);
+      showNotice("Cliente eliminado correctamente.", "danger");
+      fetchClients();
+    } catch (error) {
+      console.error("Error deleting client:", error);
+      showNotice("Error al eliminar el cliente", "danger");
+    }
   };
 
   const clientToDelete = clients.find((client) => client.id === clientToDeleteId);
-  const selectedHistoryClient = clients.find(
-    (client) => client.id === historyClientId,
-  );
-  const selectedMostPurchasedClient = clients.find(
-    (client) => client.id === mostPurchasedClientId,
-  );
+  const selectedHistoryClient = clients.find((client) => client.id === historyClientId);
+  const selectedMostPurchasedClient = clients.find((client) => client.id === mostPurchasedClientId);
+
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("es-HN", {
       style: "currency",
       currency: "HNL",
       minimumFractionDigits: 2,
     }).format(value);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("es-HN");
+  };
 
   return (
     <DashboardLayout>
@@ -340,9 +295,13 @@ export default function ClientsPage() {
             </div>
           )}
 
-          {filteredClients.length > 0 ? (
+          {isLoading ? (
+             <div className="flex h-64 items-center justify-center">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#8C5E78] border-t-transparent"></div>
+             </div>
+          ) : filteredClients.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {paginatedClients.map((client) => (
+              {filteredClients.map((client) => (
                 <article
                   key={client.id}
                   className="flex min-h-40 flex-col justify-between rounded-[1.15rem] border-2 border-black bg-gradient-to-br from-white via-white to-[#FFF3FA] p-4 shadow-[0_8px_18px_rgba(112,58,97,0.10)] transition hover:-translate-y-1 hover:shadow-[0_14px_28px_rgba(112,58,97,0.16)]"
@@ -354,11 +313,11 @@ export default function ClientsPage() {
                     <div className="mt-3 space-y-1 text-sm text-slate-700">
                       <p className="flex min-w-0 items-center gap-2">
                         <Mail size={16} className="shrink-0 text-[#8C5E78]" />
-                        <span className="break-all">{client.email}</span>
+                        <span className="break-all">{client.email || "-"}</span>
                       </p>
                       <p className="flex min-w-0 items-center gap-2">
                         <Phone size={16} className="shrink-0 text-[#8C5E78]" />
-                        <span className="break-words">{client.phone}</span>
+                        <span className="break-words">{client.phone || "-"}</span>
                       </p>
                       <p className="break-words">
                         <span className="font-black text-slate-800">RTN: </span>
@@ -419,7 +378,7 @@ export default function ClientsPage() {
             </div>
           )}
 
-          {filteredClients.length > CLIENTS_PER_PAGE && (
+          {totalClients > CLIENTS_PER_PAGE && (
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -465,7 +424,6 @@ export default function ClientsPage() {
                   </label>
                   <input
                     type="email"
-                    required
                     value={formData.email}
                     onChange={(event) =>
                       setFormData((current) => ({
@@ -484,7 +442,6 @@ export default function ClientsPage() {
                   </label>
                   <input
                     type="tel"
-                    required
                     value={formData.phone}
                     onChange={(event) =>
                       setFormData((current) => ({
@@ -506,14 +463,17 @@ export default function ClientsPage() {
                     onChange={(event) =>
                       setFormData((current) => ({
                         ...current,
-                        rtn: event.target.value,
+                        rtn: event.target.value.replace(/\D/g, ""),
                       }))
                     }
                     className="koara-input-field"
                     inputMode="numeric"
                     maxLength={14}
-                    placeholder="RTN opcional, 14 digitos"
+                    placeholder="00000000000000"
                   />
+                  <p className="text-right text-xs font-bold text-black/50">
+                    {formData.rtn?.length || 0} / 14
+                  </p>
                 </div>
 
                 {formError && (
@@ -572,9 +532,13 @@ export default function ClientsPage() {
               </div>
 
               <div className="no-scrollbar max-h-[55vh] overflow-y-auto rounded-3xl border-2 border-black bg-white">
-                {(PURCHASE_HISTORY[selectedHistoryClient.id] ?? []).length > 0 ? (
+                {isHistoryLoading ? (
+                  <div className="flex py-10 items-center justify-center">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#8C5E78] border-t-transparent"></div>
+                  </div>
+                ) : purchaseHistory.length > 0 ? (
                   <div className="divide-y divide-black/10">
-                    {(PURCHASE_HISTORY[selectedHistoryClient.id] ?? []).map(
+                    {purchaseHistory.map(
                       (invoice) => (
                         <div
                           key={invoice.id}
@@ -584,30 +548,19 @@ export default function ClientsPage() {
                             <span className="font-black text-slate-900">
                               Factura:{" "}
                             </span>
-                            {invoice.invoiceNumber}
+                            {invoice.invoice_number}
                           </p>
                           <p>
                             <span className="font-black text-slate-900">
                               Fecha:{" "}
                             </span>
-                            {invoice.date}
+                            {formatDate(invoice.created_at)}
                           </p>
                           <p>
                             <span className="font-black text-slate-900">
                               Total:{" "}
                             </span>
-                            {formatCurrency(invoice.total)}
-                          </p>
-                          <p>
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-black ${
-                                invoice.status === "Pagada"
-                                  ? "bg-[#DCFCE7] text-[#166534]"
-                                  : "bg-[#FEF3C7] text-[#92400E]"
-                              }`}
-                            >
-                              {invoice.status}
-                            </span>
+                            {formatCurrency(Number(invoice.total))}
                           </p>
                         </div>
                       ),
@@ -650,26 +603,26 @@ export default function ClientsPage() {
               </div>
 
               <div className="no-scrollbar max-h-[58vh] space-y-3 overflow-y-auto">
-                {(MOST_PURCHASED_PRODUCTS[selectedMostPurchasedClient.id] ?? [])
-                  .length > 0 ? (
-                  (MOST_PURCHASED_PRODUCTS[selectedMostPurchasedClient.id] ?? []).map(
-                    (product, index) => (
+                {isTopProductsLoading ? (
+                  <div className="flex py-10 items-center justify-center">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#8C5E78] border-t-transparent"></div>
+                  </div>
+                ) : topProducts.length > 0 ? (
+                  topProducts.map(
+                    (item, index) => (
                       <div
-                        key={product.id}
+                        key={item.product.id}
                         className="grid grid-cols-[auto_1fr] gap-4 rounded-3xl border-2 border-black bg-white px-5 py-4 sm:grid-cols-[auto_1fr_auto]"
                       >
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F4B8D4] text-sm font-black text-black">
                           {index + 1}
                         </div>
                         <div>
-                          <p className="font-black text-black">{product.name}</p>
+                          <p className="font-black text-black">{item.product.name}</p>
                           <p className="text-sm font-medium text-slate-600">
-                            {product.units} unidades compradas
+                            {item.total_quantity} unidades compradas
                           </p>
                         </div>
-                        <p className="col-span-2 text-sm font-black text-[#703A61] sm:col-span-1 sm:self-center">
-                          {formatCurrency(product.totalSpent)}
-                        </p>
                       </div>
                     ),
                   )

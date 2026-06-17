@@ -263,7 +263,7 @@ export default function ProductsPage() {
                 className="flex items-center gap-2 px-4 py-2.5 bg-white text-black text-sm font-medium rounded-full border border-black/20 hover:bg-gray-100 transition-colors whitespace-nowrap"
               >
                 {activeCategory ?? "Category"}
-                <ChevronDown size={14} className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+                <ChevronDown size={14} className={`transition-transform ${dropdownOpen ? "rotate-180" : ""} relative right-4`} />
               </button>
 
               {dropdownOpen && (
