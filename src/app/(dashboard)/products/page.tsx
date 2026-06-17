@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Search, Plus, ChevronDown, CheckCircle } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
 import ProductCard, { type Product } from "@/components/inventory/ProductCard";
@@ -12,23 +12,8 @@ import {
 } from "@/components/inventory/CategoryModals";
 import { ProductModal, type ProductFormData } from "@/components/inventory/ProductModal";
 import { ConfirmModal } from "@/components/ConfirmModal";
-
-const CARD_COLORS = ["#F5EDE8", "#F9D5E0", "#E8E8EC", "#EDF5EE"];
-
-const INITIAL_PRODUCTS: Product[] = [
-  { id: "1",  name: "Clean Mist",     code: "CM001", description: "Bruma suave para refrescar la piel.",      stock: 8,  price: 19.00, category: "Mist",     imageColor: CARD_COLORS[0] },
-  { id: "2",  name: "Serum Balance",  code: "SB001", description: "Suero facial de absorción rápida.",        stock: 12, price: 28.00, category: "Serum",    imageColor: CARD_COLORS[1] },
-  { id: "3",  name: "Velvet Cream",   code: "VC001", description: "Crema nutritiva premium.",                 stock: 2,  price: 35.00, category: "Cream",    imageColor: CARD_COLORS[2] },
-  { id: "4",  name: "Pure Cleanser",  code: "PC001", description: "Limpieza suave y ligera.",                 stock: 7,  price: 18.00, category: "Cleanser", imageColor: CARD_COLORS[3] },
-  { id: "5",  name: "Glow Serum",     code: "GS001", description: "Ilumina y unifica el tono de la piel.",   stock: 5,  price: 32.00, category: "Serum",    imageColor: CARD_COLORS[1] },
-  { id: "6",  name: "Hydra Cream",    code: "HC001", description: "Hidratación profunda durante 24 horas.",  stock: 9,  price: 25.00, category: "Cream",    imageColor: CARD_COLORS[2] },
-  { id: "7",  name: "Fresh Toner",    code: "FT001", description: "Equilibra el pH de la piel.",             stock: 15, price: 22.00, category: "Toner",    imageColor: CARD_COLORS[0] },
-  { id: "8",  name: "Repair Oil",     code: "RO001", description: "Aceite reparador de uso facial.",         stock: 3,  price: 42.00, category: "Oil",      imageColor: CARD_COLORS[1] },
-  { id: "9",  name: "Eye Cream",      code: "EC001", description: "Reduce ojeras y líneas finas.",           stock: 6,  price: 38.00, category: "Cream",    imageColor: CARD_COLORS[2] },
-  { id: "10", name: "Sun Shield",     code: "SS001", description: "Protector solar SPF 50+.",                stock: 20, price: 29.00, category: "SPF",      imageColor: CARD_COLORS[0] },
-  { id: "11", name: "Pore Serum",     code: "PS001", description: "Minimiza poros visibles al instante.",    stock: 4,  price: 31.00, category: "Serum",    imageColor: CARD_COLORS[1] },
-  { id: "12", name: "Calm Mist",      code: "CM002", description: "Calma y refresca pieles sensibles.",      stock: 11, price: 20.00, category: "Mist",     imageColor: CARD_COLORS[3] },
-];
+import { productsApi } from "@/services/products.service";
+import { categoriesApi, type Category } from "@/services/categories.service";
 
 const EMPTY_FORM: ProductFormData = {
   name: "", code: "", description: "", price: "", stock: "", minStock: "", category: "",
@@ -37,38 +22,65 @@ const EMPTY_FORM: ProductFormData = {
 const PRODUCTS_PER_PAGE = 8;
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Category management state
-  const [categories, setCategories] = useState<string[]>(() =>
-    Array.from(new Set(INITIAL_PRODUCTS.map((p) => p.category))).sort()
-  );
+  const [apiCategories, setApiCategories] = useState<Category[]>([]);
+
   const [showManageCategories, setShowManageCategories] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
 
-  // Toast
   const [toast, setToast] = useState<string | null>(null);
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Product modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [formData, setFormData] = useState<ProductFormData>(EMPTY_FORM);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Confirm delete state
   const [confirmData, setConfirmData] = useState<{ message: string; onConfirm: () => void } | null>(null);
+
+  const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const cats = await categoriesApi.getAll();
+      setApiCategories(cats);
+    } catch {
+      // silent fail — dropdown stays empty
+    }
+  }, []);
+
+  const fetchProducts = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const catId = activeCategory
+        ? apiCategories.find((c) => c.name === activeCategory)?.id
+        : undefined;
+      const result = await productsApi.getAll(currentPage, PRODUCTS_PER_PAGE, search || undefined, catId);
+      setProducts(result.data);
+      setTotalProducts(result.total);
+    } catch {
+      showToast("Error loading products.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, search, activeCategory, apiCategories]);
+
+  useEffect(() => { fetchCategories(); }, [fetchCategories]);
+  useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -80,20 +92,6 @@ export default function ProductsPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filtered = useMemo(() => {
-    return products.filter((p) => {
-      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = !activeCategory || p.category === activeCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [products, search, activeCategory]);
-
-  const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
-  const paginated = filtered.slice(
-    (currentPage - 1) * PRODUCTS_PER_PAGE,
-    currentPage * PRODUCTS_PER_PAGE
-  );
-
   const handleSearch = (value: string) => {
     setSearch(value);
     setCurrentPage(1);
@@ -104,37 +102,50 @@ export default function ProductsPage() {
     setCurrentPage(1);
   };
 
-  // Category handlers
-  const handleAddCategory = (name: string) => {
-    if (!categories.includes(name)) {
-      setCategories((prev) => [...prev, name].sort());
+  const handleAddCategory = async (name: string) => {
+    try {
+      await categoriesApi.create(name);
+      await fetchCategories();
+      setShowAddCategory(false);
+      setShowManageCategories(true);
+      showToast("Category added successfully.");
+    } catch {
+      showToast("Error adding category.");
     }
-    setShowAddCategory(false);
-    setShowManageCategories(true);
-    showToast("Category added successfully.");
   };
 
-  const handleEditCategory = (newName: string) => {
+  const handleEditCategory = async (newName: string) => {
     if (!editingCategory) return;
-    setCategories((prev) =>
-      prev.map((c) => (c === editingCategory ? newName : c)).sort()
-    );
-    if (activeCategory === editingCategory) setActiveCategory(newName);
-    setEditingCategory(null);
-    setShowManageCategories(true);
-    showToast("Category updated successfully.");
+    const cat = apiCategories.find((c) => c.name === editingCategory);
+    if (!cat) return;
+    try {
+      await categoriesApi.update(cat.id, newName);
+      await fetchCategories();
+      if (activeCategory === editingCategory) setActiveCategory(newName);
+      setEditingCategory(null);
+      setShowManageCategories(true);
+      showToast("Category updated successfully.");
+    } catch {
+      showToast("Error updating category.");
+    }
   };
 
-  const handleDeleteCategory = () => {
+  const handleDeleteCategory = async () => {
     if (!deletingCategory) return;
-    setCategories((prev) => prev.filter((c) => c !== deletingCategory));
-    if (activeCategory === deletingCategory) setActiveCategory(null);
-    setDeletingCategory(null);
-    setShowManageCategories(true);
-    showToast("Category deleted successfully.");
+    const cat = apiCategories.find((c) => c.name === deletingCategory);
+    if (!cat) return;
+    try {
+      await categoriesApi.deactivate(cat.id);
+      await fetchCategories();
+      if (activeCategory === deletingCategory) setActiveCategory(null);
+      setDeletingCategory(null);
+      setShowManageCategories(true);
+      showToast("Category deleted successfully.");
+    } catch {
+      showToast("Error deleting category.");
+    }
   };
 
-  // Product modal handlers
   const handleOpenAddModal = () => {
     setModalMode("add");
     setFormData(EMPTY_FORM);
@@ -167,45 +178,35 @@ export default function ProductsPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      const categoryId = apiCategories.find((c) => c.name === formData.category)?.id;
+      if (!categoryId) {
+        showToast("Please select a valid category.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const dto = {
+        name: formData.name,
+        code_bar: formData.code,
+        description: formData.description || undefined,
+        category_id: categoryId,
+        stock: parseInt(formData.stock),
+        min_stock: formData.minStock ? parseInt(formData.minStock) : undefined,
+        price: parseFloat(formData.price),
+      };
 
       if (modalMode === "add") {
-        const newProduct: Product = {
-          id: (Math.max(...products.map((p) => parseInt(p.id)), 0) + 1).toString(),
-          name: formData.name,
-          code: formData.code,
-          description: formData.description,
-          price: parseFloat(formData.price),
-          stock: parseInt(formData.stock),
-          minStock: formData.minStock ? parseInt(formData.minStock) : undefined,
-          category: formData.category,
-          imageColor: CARD_COLORS[products.length % CARD_COLORS.length],
-        };
-        setProducts((prev) => [...prev, newProduct]);
+        await productsApi.create(dto);
         showToast("Product added successfully.");
       } else if (selectedId) {
-        setProducts((prev) =>
-          prev.map((p) =>
-            p.id === selectedId
-              ? {
-                  ...p,
-                  name: formData.name,
-                  code: formData.code,
-                  description: formData.description,
-                  price: parseFloat(formData.price),
-                  stock: parseInt(formData.stock),
-                  minStock: formData.minStock ? parseInt(formData.minStock) : undefined,
-                  category: formData.category,
-                }
-              : p
-          )
-        );
+        await productsApi.update(selectedId, dto);
         showToast("Product edited successfully.");
       }
 
       handleCloseModal();
+      await fetchProducts();
     } catch {
-      alert("Error saving product.");
+      showToast("Error saving product.");
     } finally {
       setIsSubmitting(false);
     }
@@ -214,20 +215,27 @@ export default function ProductsPage() {
   const handleDelete = (product: Product) => {
     setConfirmData({
       message: `Are you sure you want to delete "${product.name}"? This action cannot be undone.`,
-      onConfirm: () => {
-        setProducts((prev) => prev.filter((p) => p.id !== product.id));
-        setConfirmData(null);
-        showToast("Product deleted successfully.");
+      onConfirm: async () => {
+        try {
+          await productsApi.deactivate(product.id);
+          setConfirmData(null);
+          showToast("Product deleted successfully.");
+          await fetchProducts();
+        } catch {
+          showToast("Error deleting product.");
+          setConfirmData(null);
+        }
       },
     });
   };
+
+  const categoryNames = apiCategories.map((c) => c.name);
 
   return (
     <DashboardLayout>
       <div className="min-h-screen w-full">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 flex flex-col gap-6">
 
-          {/* Page header */}
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold">Product List</h1>
             <div className="flex items-center gap-2">
@@ -244,7 +252,6 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Search + Category dropdown */}
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
               <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -276,7 +283,7 @@ export default function ProductsPage() {
                   >
                     All
                   </button>
-                  {categories.map((cat) => (
+                  {categoryNames.map((cat) => (
                     <button
                       key={cat}
                       onClick={() => { handleCategoryFilter(cat); setDropdownOpen(false); }}
@@ -292,10 +299,11 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Product grid */}
-          {paginated.length > 0 ? (
+          {isLoading ? (
+            <p className="text-center text-gray-400 py-16">Loading products...</p>
+          ) : products.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {paginated.map((product) => (
+              {products.map((product) => (
                 <ProductCard
                   key={product.id}
                   product={product}
@@ -308,7 +316,6 @@ export default function ProductsPage() {
             <p className="text-center text-gray-500 py-16">No products found.</p>
           )}
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <Pagination
               currentPage={currentPage}
@@ -322,7 +329,7 @@ export default function ProductsPage() {
 
       {showManageCategories && (
         <ManageCategoriesModal
-          categories={categories}
+          categories={categoryNames}
           onClose={() => setShowManageCategories(false)}
           onAdd={() => { setShowManageCategories(false); setShowAddCategory(true); }}
           onEdit={(cat) => { setShowManageCategories(false); setEditingCategory(cat); }}
@@ -358,7 +365,7 @@ export default function ProductsPage() {
         isOpen={isModalOpen}
         mode={modalMode}
         formData={formData}
-        categories={categories}
+        categories={categoryNames}
         setFormData={setFormData}
         onClose={handleCloseModal}
         onSubmit={handleSubmit}
