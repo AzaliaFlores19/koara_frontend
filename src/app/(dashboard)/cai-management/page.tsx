@@ -9,7 +9,6 @@ import { CaiCodesModal } from "@/components/cai/CaiCodesModal";
 import { caiApi } from "@/services/cai.service";
 import { CAICode, CAIRange } from "@/lib/types/models";
 
-// 1. MODAL LOCAL DE CONFIRMACIÓN (Z-INDEX AL FRENTE DE TODO)
 interface LocalConfirmProps {
   isOpen: boolean;
   message: string;
@@ -50,25 +49,21 @@ function LocalConfirmModal({ isOpen, message, onConfirm, onCancel }: LocalConfir
   );
 }
 
-// 2. COMPONENTE PRINCIPAL
 export default function CaiManagementPage() {
   const [codes, setCodes] = useState<CAICode[]>([]);
   const [ranges, setRanges] = useState<CAIRange[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // TOAST LOCAL CENTRADO PARA EVITAR DUPLICADOS CON LA TABLA COMPARTIDA
   const [toast, setToast] = useState<{ message: string; visible: boolean; type: "success" | "error" }>({
     message: "",
     visible: false,
     type: "success"
   });
 
-  // Estados del Modal de Confirmación Local
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState("");
   const [confirmAction, setConfirmAction] = useState<{ type: "code" | "range"; id: string } | null>(null);
 
-  // Control de Modales de Rangos
   const [isRangeModalOpen, setIsRangeModalOpen] = useState(false);
   const [isCodesModalOpen, setIsCodesModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
@@ -76,7 +71,6 @@ export default function CaiManagementPage() {
 
   const [rangeFormData, setRangeFormData] = useState({
     cai_id: "",
-    base_code: "",
     range_start: 1,
     range_end: 100000,
     expiration_date: "",
@@ -90,12 +84,11 @@ export default function CaiManagementPage() {
 
   const showErrorNotification = (message: string) => {
     setToast({ message, visible: true, type: "error" });
-    setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 4500); // 4.5s para dar tiempo a leer validaciones largas
+    setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 4500); 
   };
 
   const handleAxiosError = (error: any, fallbackMessage: string) => {
-    console.dir(error); // Mantiene el rastro en la consola interna por si acaso
-
+    console.dir(error); 
     const apiMessage = error.response?.data?.message;
 
     if (apiMessage) {
@@ -105,7 +98,7 @@ export default function CaiManagementPage() {
         showErrorNotification(apiMessage);
       }
     } else if (error.message) {
-      showErrorNotification(`Error de red: ${error.message}`);
+      showErrorNotification(`Error de red no se pudo conectar con el servidor`);
     } else {
       showErrorNotification(fallbackMessage);
     }
@@ -125,7 +118,7 @@ export default function CaiManagementPage() {
     } catch (error) {
       handleAxiosError(error, "Error cargando los datos de facturación desde el servidor.");
     } finally {
-      loading && setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -143,7 +136,6 @@ export default function CaiManagementPage() {
     setModalMode("add");
     setRangeFormData({
       cai_id: codes.find(c => c.is_active)?.id || codes[0]?.id || "",
-      base_code: "",
       range_start: 1,
       range_end: 100000,
       expiration_date: "",
@@ -157,7 +149,6 @@ export default function CaiManagementPage() {
     setModalMode("edit");
     setRangeFormData({
       cai_id: range.cai_id || "",
-      base_code: range.base_code,
       range_start: range.range_start,
       range_end: range.range_end,
       expiration_date: range.expiration_date,
@@ -170,7 +161,6 @@ export default function CaiManagementPage() {
   const handleRangeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // 1. Extraer solo la parte YYYY-MM-DD para evitar concatenaciones rotas si ya es ISO
       const rawDate = rangeFormData.expiration_date 
         ? rangeFormData.expiration_date.split('T')[0] 
         : "";
@@ -180,10 +170,8 @@ export default function CaiManagementPage() {
         : "";
 
       if (modalMode === "add") {
-        // payload limpio para creación (sin is_active por la whitelist de Nest)
         const createPayload = {
           cai_id: rangeFormData.cai_id,
-          base_code: rangeFormData.base_code,
           range_start: Number(rangeFormData.range_start),
           range_end: Number(rangeFormData.range_end),
           expiration_date: isoExpirationDate
@@ -194,40 +182,32 @@ export default function CaiManagementPage() {
         showSuccessNotification("¡Rango de facturación creado exitosamente!");
 
       } else if (selectedRangeId) {
-        // payload limpio para edición (evitando enviar cai_id o ids que la whitelist pueda rechazar)
         const updatePayload = {
-          base_code: rangeFormData.base_code,
           range_start: Number(rangeFormData.range_start),
           range_end: Number(rangeFormData.range_end),
           expiration_date: isoExpirationDate,
-          is_active: rangeFormData.is_active // Incluido por si tu DTO de edición lo requiere
+          is_active: rangeFormData.is_active 
         };
 
         const updatedRanges = await caiApi.updateRange(selectedRangeId, updatePayload);
         setRanges(updatedRanges);
         showSuccessNotification("¡Rango de facturación modificado con éxito!");
       }
-      
+      await fetchData();
       setIsRangeModalOpen(false);
-
     } catch (error) {
       handleAxiosError(error, "Ocurrió un problema al procesar el rango de facturación.");
     }
   };
 
   const handleToggleRangeRequest = (range: CAIRange) => {
-    setConfirmMessage(`¿Seguro que deseas ${range.is_active ? "desactivar" : "activar"} este rango de facturación (${range.base_code})?`);
+    setConfirmMessage(`¿Seguro que deseas ${range.is_active ? "desactivar" : "activar"} este rango de facturación (${range.range_start} - ${range.range_end})?`);
     setConfirmAction({ type: "range", id: range.id });
     setIsConfirmOpen(true);
   };
 
   const handleSaveCode = async (codeForm: { id?: string; cai_code: string }) => {
     const hasActiveCode = codes.some(c => c.is_active && c.id !== codeForm.id);
-
-    if (hasActiveCode && !codeForm.id) {
-      showErrorNotification("Ya existe un código CAI activo. Desactívalo para registrar uno nuevo.");
-      return;
-    }
 
     try {
       if (codeForm.id) {
@@ -239,6 +219,7 @@ export default function CaiManagementPage() {
         setCodes(updatedCodes);
         showSuccessNotification("¡Nuevo código CAI registrado de manera exitosa!");
       }
+      await fetchData();
     } catch (error) {
       handleAxiosError(error, "Error al intentar procesar el código CAI.");
     }
@@ -272,6 +253,7 @@ export default function CaiManagementPage() {
         setRanges(updatedRanges);
         showSuccessNotification("El estado del rango de facturación ha sido modificado.");
       }
+      await fetchData();
     } catch (error) {
       handleAxiosError(error, "Error al procesar el cambio de estado solicitado.");
     } finally {
@@ -304,10 +286,6 @@ export default function CaiManagementPage() {
       },
     },
     {
-      header: "Código Base",
-      render: (range: CAIRange) => <span className="font-mono text-xs text-slate-900 font-bold whitespace-nowrap">{range.base_code}</span>,
-    },
-    {
       header: "Rango Inicial",
       render: (range: CAIRange) => <span className="text-sm text-slate-600">{range.range_start.toLocaleString()}</span>,
     },
@@ -318,7 +296,6 @@ export default function CaiManagementPage() {
     {
       header: "Fecha Expiración",
       render: (range: CAIRange) => {
-        // Formatear fecha limpia si viene con estampa de tiempo completa
         const cleanDate = range.expiration_date ? range.expiration_date.split('T')[0] : "—";
         return <span className="text-sm text-slate-500 font-medium">{cleanDate}</span>;
       },

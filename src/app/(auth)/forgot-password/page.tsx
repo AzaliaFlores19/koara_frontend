@@ -27,18 +27,22 @@ export default function ForgotPassword() {
     setError(null);
 
     try {
-      // 1. Ejecuta la petición POST mediante Axios al backend de Nest.js
       await authApi.forgotPassword(email);
       
-      // 2. Si la respuesta es exitosa, alterna al estado de confirmación
       setEmailSent(true);
     } catch (err: any) {
-      console.error("Forgot password API error:", err);
+      //console.error("Forgot password API error:", err);
       
-      setError(
-        err?.response?.data?.message || 
-        "Failed to send recovery link. Please verify your connection or try again."
-      );
+      if (!err.response) {
+        setError("No se pudo conectar con el servidor. Por favor, verifica tu conexión a internet o intenta más tarde.");
+      } else if (err.response.status === 404) {
+        setError("El servicio de recuperación no está disponible actualmente (404). Por favor, contacta al administrador.");
+      } else {
+        setError(
+          err?.response?.data?.message || 
+          "Falló el envío del enlace de recuperación. Por favor, intenta nuevamente más tarde."
+        );
+      }
     } finally {
       setLoading(false);
     }
