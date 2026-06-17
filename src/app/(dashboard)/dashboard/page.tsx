@@ -83,8 +83,9 @@ export default function Dashboard() {
   const formattedTopProducts = metrics.bestSellingProducts.map((p) => ({
     src: p.image || "/placeholder.svg", 
     name: p.name,
-    category: "Serums", 
-    code: p.code
+    category: p.category?.name || "Sin categoría", 
+    code: p.code_bar,
+    sales: p.total_quantity_sold
   }));
 
   return (

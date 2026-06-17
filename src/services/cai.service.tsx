@@ -7,7 +7,6 @@ interface CreateCaiDto {
 
 interface CreateCaiRangeDto {
   cai_id: string;
-  base_code: string;
   range_start: number;
   range_end: number;
   expiration_date: string;
@@ -15,7 +14,6 @@ interface CreateCaiRangeDto {
 
 interface UpdateCaiRangeDto {
   cai_id?: string;
-  base_code?: string;
   range_start?: number;
   range_end?: number;
   expiration_date?: string;

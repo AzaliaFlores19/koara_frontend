@@ -17,12 +17,24 @@ export interface InvoiceSummary {
   paid: number;       
 }
 
+export interface BestSellingProduct {
+  id: string;
+  name: string;
+  code_bar: string;
+  image: string | null;
+  category: {
+    id: string;
+    name: string;
+  } | null;
+  total_quantity_sold: number;
+}
+
 export interface DashboardMetrics {
   totalProducts: number;
   totalClients: number;
   totalCategories: number;
   lowStockProducts: LowStockProduct[];
-  bestSellingProducts: any[]; 
+  bestSellingProducts: BestSellingProduct[]; 
   todaySales: SalesSummary;
   invoices: InvoiceSummary;
 }
@@ -72,7 +84,7 @@ export const dashboardService = {
       yesterdaySalesData,
       monthSalesData,
       allInvoices,
-      mockedApiData 
+      topSellingData 
     ] = await Promise.all([
       apiClient.get<PagedResponse>("/products?limit=1").then(res => res.data.total).catch(() => 0),
       apiClient.get<PagedResponse>("/clients?limit=1").then(res => res.data.total).catch(() => 0),
@@ -104,7 +116,7 @@ export const dashboardService = {
         }),
         
       apiClient.get<InvoiceBackendResponse[]>("/invoices").then(res => res.data).catch(() => []),
-      dashboardApi.getMetrics().catch(() => ({ bestSellingProducts: [] }))
+      apiClient.get<BestSellingProduct[]>("/products/top-selling?limit=10").then(res => res.data).catch(() => [])
     ]);
 
     const formatCurrency = (amount: number) => 
@@ -118,7 +130,7 @@ export const dashboardService = {
       totalClients: clientCount,
       totalCategories: catCount,
       lowStockProducts: lowStockData,
-      bestSellingProducts: mockedApiData?.bestSellingProducts || [], 
+      bestSellingProducts: topSellingData || [], 
       todaySales: {
         current: formatCurrency(todaySalesData?.total_after_tax || 0),
         yesterday: formatCurrency(yesterdaySalesData?.total_after_tax || 0),
