@@ -79,13 +79,18 @@ export function Table<T extends { id: string | number }>({
     let hasEdit = false;
 
     data.forEach((item) => {
-      if (!seenIdsRef.current.has(item.id)) {
-        hasAddition = true;
-        seenIdsRef.current.add(item.id);
+      const itemKey = String(item.id);
+      if (!seenIdsRef.current.has(itemKey)) {
+        // Only mark as addition if we already had some data before, 
+        // otherwise it's just the initial data load
+        if (prevDataMapRef.current.size > 0) {
+          hasAddition = true;
+        }
+        seenIdsRef.current.add(itemKey);
       }
 
       const prevItem = prevDataMapRef.current.get(item.id);
-      if (prevItem && prevItem !== item) {
+      if (prevItem && JSON.stringify(prevItem) !== JSON.stringify(item)) {
         hasEdit = true;
       }
     });

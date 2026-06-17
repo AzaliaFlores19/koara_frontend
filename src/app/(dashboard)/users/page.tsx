@@ -89,28 +89,37 @@ export default function UsersPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        phone: formData.phone?.trim() || undefined,
+      };
+
       if (modalMode === "add") {
+        // Validation for password strength if adding a new user
+        const password = formData.password || "";
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+        if (!passwordRegex.test(password)) {
+          alert("Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one number.");
+          setIsSubmitting(false);
+          return;
+        }
+
         await usersApi.create({
-          name: formData.name,
-          email: formData.email,
-          role: formData.role,
-          password: formData.password,
-          phone: formData.phone,
+          ...payload,
+          password,
         });
       } else if (selectedUserId) {
-        await usersApi.update(selectedUserId, {
-          name: formData.name,
-          email: formData.email,
-          role: formData.role,
-          phone: formData.phone,
-        });
+        await usersApi.update(selectedUserId, payload);
       }
 
       await fetchUsers();
       handleCloseModal();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error saving user:", err);
-      alert("Failed to save user changes.");
+      const errorMessage = err.response?.data?.message || "Failed to save user changes.";
+      alert(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
