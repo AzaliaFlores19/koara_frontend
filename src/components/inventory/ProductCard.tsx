@@ -35,7 +35,7 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
         <h3 className="font-semibold text-sm text-black leading-tight mt-2">{product.name}</h3>
         <p className="text-xs text-gray-500 leading-snug line-clamp-2">{product.description}</p>
         <p className="text-xs text-gray-500 mt-1">Stock: {product.stock}</p>
-        <p className="font-semibold text-sm text-black">${product.price.toFixed(2)}</p>
+        <p className="font-semibold text-sm text-black">${product.price?.toFixed(2) ?? "0.00"}</p>
 
         <div className="flex gap-2 mt-2">
           <button
