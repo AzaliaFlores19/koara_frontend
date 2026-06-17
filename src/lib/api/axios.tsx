@@ -1,7 +1,7 @@
 import { getAuthToken, clearAuth } from "@/lib/api/auth.api";
 import axios from 'axios';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export const apiClient = axios.create({
   baseURL: BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`,
