@@ -32,71 +32,71 @@ export function UserModal({
       />
       <div className="koara-modal-card animate-koara-modal">
         <h2 className="text-2xl font-bold mb-6 text-black">
-          {mode === "add" ? "Add User" : "Edit User"}
+          {mode === "add" ? "Agregar Usuario" : "Editar Usuario"}
         </h2>
         
         <form onSubmit={onSubmit} className="space-y-5">
           <div className="space-y-2">
-            <label className="text-xs font-bold text-black uppercase tracking-wider">Name</label>
+            <label className="text-xs font-bold text-black uppercase tracking-wider">Nombre</label>
             <input
               type="text"
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="koara-input-field"
-              placeholder="Enter full name"
+              placeholder="Ingrese el nombre completo"
             />
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-black uppercase tracking-wider">Email</label>
+              <label className="text-xs font-bold text-black uppercase tracking-wider">Correo electrónico</label>
               <input
                 type="email"
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="koara-input-field"
-                placeholder="name@example.com"
+                placeholder="nombre@ejemplo.com"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-black uppercase tracking-wider">Phone (Optional)</label>
+              <label className="text-xs font-bold text-black uppercase tracking-wider">Teléfono (Opcional)</label>
               <input
                 type="text"
                 value={formData.phone || ""}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className="koara-input-field"
-                placeholder="e.g. 9999-9999"
+                placeholder="ej. 9999-9999"
               />
             </div>
           </div>
 
           {mode === "add" && (
             <div className="space-y-2">
-              <label className="text-xs font-bold text-black uppercase tracking-wider">Password</label>
+              <label className="text-xs font-bold text-black uppercase tracking-wider">Contraseña</label>
               <input
                 type="password"
                 required={mode === "add"}
                 value={formData.password || ""}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="koara-input-field"
-                placeholder="Min 8 chars, 1 upper, 1 lower, 1 number"
+                placeholder="Mín. 8 caracteres, 1 mayúscula, 1 minúscula, 1 número"
               />
             </div>
           )}
           
           <div className="space-y-2">
-            <label className="text-xs font-bold text-black uppercase tracking-wider">Role</label>
+            <label className="text-xs font-bold text-black uppercase tracking-wider">Rol</label>
             <div className="relative">
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value as User["role"] })}
                 className="koara-input-field appearance-none pr-10"
               >
-                <option value="EMPLOYEE">Employee</option>
-                <option value="ADMIN">Admin</option>
+                <option value="EMPLOYEE">Empleado</option>
+                <option value="ADMIN">Administrador</option>
               </select>
               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-900 pointer-events-none" size={18} />
             </div>
@@ -108,14 +108,14 @@ export function UserModal({
               onClick={onClose}
               className="koara-btn-cancel"
             >
-              Cancel
+              Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="koara-btn-pink"
             >
-              {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : "Save"}
+              {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : "Guardar"}
             </button>
           </div>
         </form>

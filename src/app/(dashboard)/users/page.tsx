@@ -53,7 +53,7 @@ export default function UsersPage() {
       setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching users:", err);
-      setError("Failed to load users. Please try again later.");
+      setError("Error al cargar los usuarios. Por favor, inténtelo de nuevo más tarde.");
       setUsers([]);
     } finally {
       setLoading(false);
@@ -101,7 +101,7 @@ export default function UsersPage() {
         const password = formData.password || "";
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
         if (!passwordRegex.test(password)) {
-          alert("Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one number.");
+          alert("La contraseña debe tener al menos 8 caracteres e incluir al menos una letra mayúscula, una letra minúscula y un número.");
           setIsSubmitting(false);
           return;
         }
@@ -118,7 +118,7 @@ export default function UsersPage() {
       handleCloseModal();
     } catch (err: any) {
       console.error("Error saving user:", err);
-      const errorMessage = err.response?.data?.message || "Failed to save user changes.";
+      const errorMessage = err.response?.data?.message || "Error al guardar los cambios del usuario.";
       alert(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -131,7 +131,7 @@ export default function UsersPage() {
       await fetchUsers();
     } catch (err) {
       console.error("Error deactivating user:", err);
-      alert("Failed to deactivate user.");
+      alert("Error al desactivar el usuario.");
     }
   };
 
@@ -143,7 +143,7 @@ export default function UsersPage() {
 
   const columns = [
     {
-      header: "Name",
+      header: "Nombre",
       render: (user: User) => (
         <div className="flex items-center gap-3">
           <div className="w-5 h-5 flex items-center justify-center text-gray-400">
@@ -154,31 +154,31 @@ export default function UsersPage() {
       ),
     },
     {
-      header: "Email",
+      header: "Correo electrónico",
       render: (user: User) => (
         <span className="text-sm text-gray-500">{user.email}</span>
       ),
     },
     {
-      header: "Role",
+      header: "Rol",
       render: (user: User) => (
         <span
           className={
             user.role === "ADMIN" ? "k-badge-admin" : "k-badge-employee"
           }
         >
-          {user.role}
+          {user.role === "ADMIN" ? "Administrador" : "Empleado"}
         </span>
       ),
     },
     {
-      header: "Actions",
+      header: "Acciones",
       render: (user: User, { openConfirm }: any) => (
         <div className="flex items-center justify-end gap-2">
           <button
             onClick={() => handleOpenEditModal(user)}
             className="koara-icon-btn"
-            aria-label="Edit user"
+            aria-label="Editar usuario"
           >
             <Pencil size={14} />
           </button>
@@ -190,7 +190,7 @@ export default function UsersPage() {
               })
             }
             className="koara-icon-btn"
-            aria-label="Delete user"
+            aria-label="Eliminar usuario"
           >
             <Trash2 size={14} />
           </button>
@@ -222,7 +222,7 @@ export default function UsersPage() {
             />
             <input
               type="text"
-              placeholder="Search users..."
+              placeholder="Buscar usuarios..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="koara-input !pl-12"
@@ -230,7 +230,7 @@ export default function UsersPage() {
           </div>
           <button onClick={handleOpenAddModal} className="koara-btn-black">
             <Plus size={18} />
-            Add User
+            Agregar Usuario
           </button>
         </div>
         <Table data={filteredUsers} columns={columns} itemsPerPage={8} />
