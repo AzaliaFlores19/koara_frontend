@@ -9,24 +9,24 @@ interface DateRangePickerProps {
 
 export function DateRangePicker({ start, end, onChange, className = "" }: DateRangePickerProps) {
   return (
-    <div className={`flex flex-wrap items-center gap-3 ${className}`}>
-      <div className="relative group">
+    <div className={`flex items-center gap-2 ${className}`}>
+      <div className="relative flex-1">
         <input
           type="date"
           value={start}
           onChange={(e) => onChange({ start: e.target.value, end })}
-          className="bg-white border-2 border-slate-900 rounded-full pl-11 pr-6 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all focus:ring-2 focus:ring-[#f4b8d4]/20 focus:border-[#f4b8d4] outline-none active:scale-[0.98]"
+          className="w-full bg-white border-2 border-slate-900 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all focus:outline-none"
         />
       </div>
 
-      <span className="text-slate-400 font-black text-xs uppercase tracking-widest">to</span>
+      <span className="text-slate-400 font-black text-[10px] uppercase tracking-widest shrink-0">to</span>
 
-      <div className="relative group">
+      <div className="relative flex-1">
         <input
           type="date"
           value={end}
           onChange={(e) => onChange({ start, end: e.target.value })}
-          className="bg-white border-2 border-slate-900 rounded-full pl-11 pr-6 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all focus:ring-2 focus:ring-[#f4b8d4]/20 focus:border-[#f4b8d4] outline-none active:scale-[0.98]"
+          className="w-full bg-white border-2 border-slate-900 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all focus:outline-none"
         />
       </div>
     </div>
