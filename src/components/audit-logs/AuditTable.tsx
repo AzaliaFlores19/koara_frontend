@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { AuditLog } from "@/lib/api/audit-logs";
+import { AuditLog } from "@/lib/types/models";
 
 interface AuditTableProps {
   data: AuditLog[];

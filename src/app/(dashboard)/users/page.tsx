@@ -51,13 +51,20 @@ export default function UsersPage() {
     const admin = checkIsAdmin();
     if (!admin) {
       router.replace("/dashboard");
+      setIsAuthorized(false);
     } else {
       setIsAuthorized(true);
-      fetchUsers();
     }
   }, [router]);
 
+  useEffect(() => {
+    if (isAuthorized) {
+      fetchUsers();
+    }
+  }, [isAuthorized]);
+
   const fetchUsers = async () => {
+    if (!isAuthorized) return;
     try {
       setLoading(true);
       const data = await usersApi.getAll();

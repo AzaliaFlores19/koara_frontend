@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { getAuth, isAdmin } from "@/lib/auth";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -10,22 +11,25 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    // 1. Define aquí las rutas de tu sistema Koara que requieren token JWT
+    // 1. Define routes that require authentication
     const protectedRoutes = ["/profile", "/dashboard", "/inventory", "/users", "/clients", "/invoices", "/cai-management", "/reports", "/audit-logs", "/branding"];
     
-    // Comprobar si la ruta actual es una de las protegidas
-    const isProtected = protectedRoutes.some(route => pathname.startsWith(route));
+    // 2. Define routes that require ADMIN role
+    const adminRoutes = ["/users", "/cai-management", "/reports", "/audit-logs", "/branding"];
     
-    // 2. Intentar leer el JWT desde el localStorage
-    // (Asegúrate de que 'token' coincida con el nombre que usas al iniciar sesión)
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null; 
+    const isProtected = protectedRoutes.some(route => pathname.startsWith(route));
+    const isAdminRoute = adminRoutes.some(route => pathname.startsWith(route));
+    
+    const auth = getAuth();
+    const token = auth?.token;
 
     if (isProtected && !token) {
-      // Si la ruta es privada y no hay JWT, bloqueamos el acceso y expulsamos al Login
       setAuthorized(false);
-      router.push("/"); 
+      router.push("/login"); 
+    } else if (isAdminRoute && !isAdmin()) {
+      setAuthorized(false);
+      router.push("/dashboard");
     } else {
-      // Si la ruta es pública (como el login) o si hay un JWT válido, permitimos la entrada
       setAuthorized(true);
     }
   }, [pathname, router]);

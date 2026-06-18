@@ -1,16 +1,20 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Search, Loader2 } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
 import { AuditTable } from "@/components/audit-logs/AuditTable";
-import { auditLogsApi, AuditLog, AuditEntity, AuditAction } from "@/lib/api/audit-logs";
-import { usersApi } from "@/lib/api/users";
+import { auditApi } from "@/services/audit.service";
+import { usersApi } from "@/services/users.service";
+import { AuditLog, AuditEntity, AuditAction, User } from "@/lib/types/models";
 import { Dropdown } from "@/components/Dropdown";
 import { DateRangePicker } from "@/components/audit-logs/DateRangePicker";
-import { User } from "@/lib/api/auth";
+import { isAdmin } from "@/lib/auth";
 
 export default function AuditLogsPage() {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,27 +26,38 @@ export default function AuditLogsPage() {
   const [filterAction, setFilterAction] = useState("Todas las Acciones");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
 
+  useEffect(() => {
+    const isUserAdmin = isAdmin();
+    if (!isUserAdmin) {
+      router.replace("/dashboard");
+      setAuthorized(false);
+    } else {
+      setAuthorized(true);
+    }
+  }, [router]);
+
   const entityMapping: Record<string, AuditEntity> = {
-    "CATEGORÍA": AuditEntity.CATEGORY,
-    "USUARIOS": AuditEntity.USERS,
-    "PRODUCTOS": AuditEntity.PRODUCTS,
-    "FACTURAS": AuditEntity.INVOICES,
-    "PRODUCTOS DE FACTURA": AuditEntity.INVOICE_PRODUCTS,
-    "CLIENTES": AuditEntity.CLIENTS,
-    "CAI": AuditEntity.CAI,
-    "RANGO CAI": AuditEntity.CAI_RANGE,
-    "EMPRESA": AuditEntity.COMPANY,
+    "CATEGORÍA": "CATEGORY",
+    "USUARIOS": "USERS",
+    "PRODUCTOS": "PRODUCTS",
+    "FACTURAS": "INVOICES",
+    "PRODUCTOS DE FACTURA": "INVOICE_PRODUCTS",
+    "CLIENTES": "CLIENTS",
+    "CAI": "CAI",
+    "RANGO CAI": "CAI_RANGE",
+    "EMPRESA": "COMPANY",
   };
 
   const actionMapping: Record<string, AuditAction> = {
-    "CREAR": AuditAction.CREATE,
-    "ACTUALIZAR": AuditAction.UPDATE,
-    "DESACTIVAR": AuditAction.DEACTIVATE,
-    "INICIO SESIÓN": AuditAction.LOGIN,
-    "CIERRE SESIÓN": AuditAction.LOGOUT,
+    "CREAR": "CREATE",
+    "ACTUALIZAR": "UPDATE",
+    "DESACTIVAR": "DEACTIVATE",
+    "INICIO SESIÓN": "LOGIN",
+    "CIERRE SESIÓN": "LOGOUT",
   };
 
   const fetchLogs = useCallback(async () => {
+    if (!authorized) return;
     try {
       setLoading(true);
       const selectedUser = users.find(u => u.name === filterUser);
@@ -53,16 +68,17 @@ export default function AuditLogsPage() {
         startDate: dateRange.start || undefined,
         endDate: dateRange.end || undefined,
       };
-      const data = await auditLogsApi.getAll(filters);
+      const data = await auditApi.getAuditLogs(filters);
       setLogs(data);
     } catch (err) {
       console.error("Error fetching audit logs:", err);
     } finally {
       setLoading(false);
     }
-  }, [filterUser, filterEntity, filterAction, dateRange, users]);
+  }, [filterUser, filterEntity, filterAction, dateRange, users, authorized]);
 
   useEffect(() => {
+    if (!authorized) return;
     const init = async () => {
       try {
         const usersData = await usersApi.getAll();
@@ -72,11 +88,13 @@ export default function AuditLogsPage() {
       }
     };
     init();
-  }, []);
+  }, [authorized]);
 
   useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
+    if (authorized) {
+      fetchLogs();
+    }
+  }, [fetchLogs, authorized]);
 
   const filteredLogs = logs.filter((log) => {
     const matchesSearch =
@@ -90,7 +108,9 @@ export default function AuditLogsPage() {
   const entityOptions = ["Todas las Entidades", ...Object.keys(entityMapping)];
   const actionOptions = ["Todas las Acciones", ...Object.keys(actionMapping)];
 
-  if (loading && logs.length === 0) {
+  if (authorized === false) return null;
+
+  if (authorized === null || (loading && logs.length === 0)) {
     return (
       <DashboardLayout>
         <div className="flex min-h-[70vh] items-center justify-center">
