@@ -80,4 +80,21 @@ export const reportsApi = {
     const { data } = await apiClient.get(`/reports/frequent-customers?${params}`);
     return data;
   },
+
+  async exportReport(
+    reportType: "sales" | "top-products" | "frequent-customers" | "analytics",
+    startDate: string,
+    endDate: string,
+    format: "pdf" | "csv",
+    extra: Record<string, string> = {},
+  ) {
+    const params = new URLSearchParams({ format, startDate, endDate, ...extra });
+    const { data } = await apiClient.get(`/reports/${reportType}/export?${params}`, { responseType: "blob" });
+    const url = URL.createObjectURL(new Blob([data]));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `reporte-${reportType}-${startDate}-${endDate}.${format}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
 };
