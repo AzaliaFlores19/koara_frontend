@@ -20,10 +20,10 @@ export const caiApi = {
   getRanges: () => 
     apiGet<CAIRange[]>("cai-ranges"),
     
-  createRange: (data: Omit<CAIRange, "id" | "is_active" | "current_invoice_number">) => 
+  createRange: (data: Omit<CAIRange, "id" | "is_active" | "current_invoice_number" | "base_code">) => 
     apiPost<CAIRange[]>("cai-ranges", data),
     
-  updateRange: (id: string, data: Omit<CAIRange, "id" | "current_invoice_number">) => 
+  updateRange: (id: string, data: Omit<CAIRange, "id" | "current_invoice_number" | "base_code">) => 
     apiPut<CAIRange[]>(`cai-ranges/${id}`, data),
     
   toggleRangeStatus: (id: string) => 

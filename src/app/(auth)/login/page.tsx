@@ -28,33 +28,32 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+    setError(null); // Reseteamos el error al intentar de nuevo, pero sin borrar inputs
 
     try {
-      // 1. Ejecuta la petición Axios procesada por nuestro interceptor simulado
-      const response =
-      await authApi.login(
+      const response = await authApi.login(
         formData.email,
         formData.password
       );
 
-    const { user, access_token } = response;
+      const { user, access_token } = response;
 
-    setAuth({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: access_token,
-    });
+      setAuth({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token: access_token,
+      });
 
-router.push("/dashboard");
+      router.push("/dashboard");
     } catch (err: any) {
-      //console.error("Login failure connection log:", err);
-      // El condicional extrae de manera exacta los mensajes personalizados que inyectamos arriba
+      // Extrae exactamente el string "Credenciales invalidas" enviado desde NestJS
+      const backendMessage = err?.response?.data?.message;
+      
       setError(
-        err?.response?.data?.message ||
-          "Credenciales de correo electrónico inválidas o pérdida de comunicación con el servidor del sistema.",
+        backendMessage ||
+        "Credenciales de correo electrónico inválidas o pérdida de comunicación con el servidor del sistema."
       );
     } finally {
       setLoading(false);
@@ -67,7 +66,7 @@ router.push("/dashboard");
   };
 
   const inputCls =
-    "w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none transition-all bg-gray-50/50 text-gray-800 text-sm";
+    "w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-pink-300 transition-all bg-gray-50/50 text-gray-800 text-sm disabled:opacity-60";
 
   return (
     <div
@@ -111,6 +110,7 @@ router.push("/dashboard");
                   width={112}
                   height={112}
                   className="w-full h-full object-cover"
+                  priority
                 />
               </div>
               <h1 className="text-4xl mb-2 drop-shadow-sm font-extrabold">
@@ -155,25 +155,25 @@ router.push("/dashboard");
 
             {/* Error Notification Block */}
             {error && (
-              <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-medium flex items-center gap-2 animate-fadeIn">
+              <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-medium flex items-center gap-2 animate-fadeIn transition-all">
                 <AlertCircle size={16} className="shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <div className="space-y-1">
-                <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold">
-                  Dirección de Correo Electrónico
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="block text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                    Dirección de Correo Electrónico
+                  </label>
+                </div>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Por favor, ingresa un correo válido")}
-                  onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
-                  className={inputCls}
+                  className={`${inputCls} ${error ? 'border-red-300 focus:border-red-400 bg-red-50/10' : ''}`}
                   placeholder="admin@koara.com"
                   disabled={loading}
                   required
@@ -190,9 +190,7 @@ router.push("/dashboard");
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Por favor, ingresa tu contraseña")}
-                    onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
-                    className={`${inputCls} pr-11`}
+                    className={`${inputCls} pr-11 ${error ? 'border-red-300 focus:border-red-400 bg-red-50/10' : ''}`}
                     placeholder="••••••••"
                     disabled={loading}
                     required

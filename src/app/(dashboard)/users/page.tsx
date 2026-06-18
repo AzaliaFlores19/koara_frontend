@@ -19,7 +19,7 @@ export default function UsersPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    role: "Employee" as User["role"],
+    role: "Employee" as User["role"]
   });
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +43,7 @@ export default function UsersPage() {
 
   const handleOpenAddModal = () => {
     setModalMode("add");
-    setFormData({ name: "", email: "", role: "Employee" });
+    setFormData({ name: "", email: "", role: "Employee"});
     setSelectedUserId(null);
     setIsModalOpen(true);
   };
@@ -107,7 +107,7 @@ export default function UsersPage() {
   const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()),
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) 
   );
 
   const columns = [

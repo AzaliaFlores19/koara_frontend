@@ -138,8 +138,10 @@ export function CaiCodesModal({
                 type="text" 
                 value={codeForm.cai_code} 
                 onChange={handleInputChange} 
-                maxLength={37} // 32 chars + 5 guiones
+                maxLength={37} 
                 placeholder="123456-ABCDEF-123456-ABCDEF-123456-KT" 
+                onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Debe cumplir exactamente la estructura de 6 bloques. Ej: 123456-ABCDEF-123456-ABCDEF-123456-KT")}
+                onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
                 className="koara-input-field font-mono text-xs tracking-wider text-black"
                 required
                 pattern="^[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{2}$"

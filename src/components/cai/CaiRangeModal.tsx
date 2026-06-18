@@ -2,14 +2,13 @@
 
 import { useEffect } from "react";
 import { X } from "lucide-react";
-import { CAICode } from "@/lib/types/index";
+import { CAICode } from "@/lib/types/models";
 
 interface CaiRangeModalProps {
   isOpen: boolean;
   mode: "add" | "edit";
   formData: {
     cai_id: string;
-    base_code: string;
     range_start: number;
     range_end: number;
     expiration_date: string;
@@ -30,7 +29,6 @@ export function CaiRangeModal({
   onSubmit,
 }: CaiRangeModalProps) {
   
-  // 1. Bloquear el scroll de la página de fondo cuando este modal se abre
   useEffect(() => {
     if (!isOpen) return;
     document.body.style.overflow = "hidden";
@@ -41,40 +39,21 @@ export function CaiRangeModal({
 
   if (!isOpen) return null;
 
-  // Función para formatear el prefijo base automáticamente (000-001-01)
-  const formatBaseCode = (value: string) => {
-    const clean = value.replace(/\D/g, "");
-    
-    if (clean.length <= 3) {
-      return clean;
-    } else if (clean.length <= 6) {
-      return `${clean.slice(0, 3)}-${clean.slice(3, 6)}`;
-    } else {
-      return `${clean.slice(0, 3)}-${clean.slice(3, 6)}-${clean.slice(6, 8)}`;
-    }
-  };
-
-  const handleBaseCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatBaseCode(e.target.value);
-    setFormData({ ...formData, base_code: formatted });
-  };
-
-
-      return (
+  return (
     <>
-      {/* 1. BACKDROP CORREGIDO: Usamos min-h-screen y h-full para blindar ese pedacito de abajo */}
+      {/* Backdrop */}
       <div 
         className="fixed inset-0 min-h-screen h-full w-full z-[60] bg-black/20 backdrop-blur-sm animate-koara-fade" 
         onClick={onClose} 
       />
 
-      {/* 2. CONTENEDOR DE SCROLL: Aseguramos que también use la altura completa del viewport */}
+      {/* Contenedor de Scroll */}
       <div className="fixed inset-0 min-h-screen h-full w-full z-[61] overflow-y-auto">
         
-        {/* CENTRADOR */}
+        {/* Centrador */}
         <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
           
-          {/* TARJETA DEL MODAL */}
+          {/* Tarjeta del Modal */}
           <div className="koara-modal-card animate-koara-modal relative w-full max-w-md bg-white p-6 shadow-xl rounded-2xl">
             {/* Encabezado */}
             <div className="flex items-center justify-between mb-6">
@@ -107,28 +86,10 @@ export function CaiRangeModal({
                   <option value="">Selecciona un código CAI</option>
                   {codes.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.cai_code}
+                      {c.cai_code} {c.is_active ? "(Activo)" : "(Inactivo)"}
                     </option>
                   ))}
                 </select>
-              </div>
-
-              {/* Código Base de Emisión */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-black uppercase tracking-wider block">Código Base (Prefijo) *</label>
-                <input 
-                  type="text" 
-                  value={formData.base_code} 
-                  onChange={handleBaseCodeChange} 
-                  maxLength={10} 
-                  placeholder="Ej: 000-001-01" 
-                  className="koara-input-field font-mono text-xs text-black w-full"
-                  required
-                  pattern="^\d{3}-\d{3}-\d{2}$"
-                  title="El formato debe ser de 3 bloques numéricos separados por guiones (Ej: 000-001-01)"
-                  onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Debe cumplir con el formato numérico del prefijo SAR. Ejemplo: 000-001-01")}
-                  onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
-                />
               </div>
 
               {/* Campos Numéricos del Rango Autorizado */}
@@ -173,7 +134,7 @@ export function CaiRangeModal({
                 <label className="text-xs font-bold text-black uppercase tracking-wider block">Fecha de Expiración *</label>
                 <input 
                   type="date" 
-                  value={formData.expiration_date} 
+                  value={formData.expiration_date ? formData.expiration_date.split('T')[0] : ""} 
                   onChange={(e) => setFormData({ ...formData, expiration_date: e.target.value })} 
                   className="koara-input-field text-xs text-black w-full"
                   required
@@ -195,4 +156,3 @@ export function CaiRangeModal({
     </>
   );
 }
-
