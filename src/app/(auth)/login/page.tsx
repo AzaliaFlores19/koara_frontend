@@ -27,13 +27,31 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const email = formData.email.trim();
+    const password = formData.password.trim();
+
+    if (!email) {
+      setError("Por favor, ingresa tu correo electrónico.");
+      return;
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setError("Por favor, ingresa un correo electrónico válido.");
+      return;
+    }
+
+    if (!password) {
+      setError("Por favor, ingresa tu contraseña.");
+      return;
+    }
+
     setLoading(true);
     setError(null); // Reseteamos el error al intentar de nuevo, pero sin borrar inputs
 
     try {
       const response = await authApi.login(
-        formData.email,
-        formData.password
+        email,
+        password
       );
 
       const { user, access_token } = response;

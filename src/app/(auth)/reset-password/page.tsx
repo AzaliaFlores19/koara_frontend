@@ -49,6 +49,10 @@ function ResetPasswordContent() {
   const inputCls =
     "w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm text-gray-800 transition-all placeholder:text-gray-300 focus:outline-none focus:ring-4 focus:ring-[#F4B8D4]/35";
 
+  const clearValidationMessage = (event: FormEvent<HTMLInputElement>) => {
+    event.currentTarget.setCustomValidity("");
+  };
+
   const validatePassword = () => {
     if (!token) {
       setError("El enlace de recuperación no contiene un token válido.");
@@ -228,6 +232,12 @@ function ResetPasswordContent() {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
+                      onInvalid={(event) =>
+                        event.currentTarget.setCustomValidity(
+                          "Por favor, ingresa tu nueva contraseña.",
+                        )
+                      }
+                      onInput={clearValidationMessage}
                       className={`${inputCls} px-10 pr-11`}
                       placeholder="Ingresa tu nueva contraseña"
                       disabled={loading || !token}
@@ -258,6 +268,12 @@ function ResetPasswordContent() {
                       type={showConfirmPassword ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(event) => setConfirmPassword(event.target.value)}
+                      onInvalid={(event) =>
+                        event.currentTarget.setCustomValidity(
+                          "Por favor, confirma tu nueva contraseña.",
+                        )
+                      }
+                      onInput={clearValidationMessage}
                       className={`${inputCls} px-10 pr-11`}
                       placeholder="Repite tu nueva contraseña"
                       disabled={loading || !token}

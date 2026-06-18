@@ -153,6 +153,10 @@ export default function ClientsPage() {
     setCurrentPage(1);
   };
 
+  const clearValidationMessage = (event: FormEvent<HTMLInputElement>) => {
+    event.currentTarget.setCustomValidity("");
+  };
+
   const closeAddModal = () => {
     setIsAddModalOpen(false);
     setFormData(EMPTY_FORM);
@@ -410,6 +414,12 @@ export default function ClientsPage() {
                     type="text"
                     required
                     value={formData.name}
+                    onInvalid={(event) =>
+                      event.currentTarget.setCustomValidity(
+                        "Por favor, ingresa el nombre del cliente.",
+                      )
+                    }
+                    onInput={clearValidationMessage}
                     onChange={(event) =>
                       setFormData((current) => ({
                         ...current,
@@ -428,6 +438,12 @@ export default function ClientsPage() {
                   <input
                     type="email"
                     value={formData.email}
+                    onInvalid={(event) =>
+                      event.currentTarget.setCustomValidity(
+                        "Por favor, ingresa un correo valido.",
+                      )
+                    }
+                    onInput={clearValidationMessage}
                     onChange={(event) =>
                       setFormData((current) => ({
                         ...current,
