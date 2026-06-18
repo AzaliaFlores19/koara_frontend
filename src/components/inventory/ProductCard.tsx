@@ -12,6 +12,7 @@ export interface Product {
   price: number;
   category: string;
   imageColor: string;
+  image?: string;
 }
 
 interface ProductCardProps {
@@ -24,31 +25,35 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
   return (
     <div className="bg-white rounded-2xl overflow-hidden border border-black flex flex-col">
       <div
-        className="h-28 flex items-center justify-center"
+        className="w-full aspect-square flex items-center justify-center overflow-hidden"
         style={{ backgroundColor: product.imageColor }}
       >
-        <Package size={32} className="text-black/20" />
+        {product.image ? (
+          <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+        ) : (
+          <Package size={40} className="text-black/20" />
+        )}
       </div>
 
-      <div className="px-3 pb-3 pt-1.5 flex flex-col gap-0.5 flex-1">
-        <p className="text-xs text-black font-bold uppercase tracking-wide">{product.code}</p>
-        <h3 className="font-semibold text-sm text-black leading-tight mt-2">{product.name}</h3>
-        <p className="text-xs text-gray-500 leading-snug line-clamp-2">{product.description}</p>
-        <p className="text-xs text-gray-500 mt-1">Stock: {product.stock}</p>
-        <p className="font-semibold text-sm text-black">${product.price?.toFixed(2) ?? "0.00"}</p>
+      <div className="px-2 pb-2 pt-1 flex flex-col gap-0.5 flex-1">
+        <p className="text-[10px] text-black font-bold uppercase tracking-wide truncate">{product.code}</p>
+        <h3 className="font-semibold text-xs text-black leading-tight mt-1 truncate">{product.name}</h3>
+        <p className="text-[10px] text-gray-500 leading-snug line-clamp-1">{product.description}</p>
+        <p className="text-[10px] text-gray-500">Stock: {product.stock}</p>
+        <p className="font-semibold text-xs text-black">L {product.price.toFixed(2)}</p>
 
-        <div className="flex gap-2 mt-2">
+        <div className="flex gap-1.5 mt-1.5">
           <button
             onClick={() => onEdit(product)}
-            className="flex-1 py-1.5 text-xs font-semibold bg-black text-white rounded-full hover:bg-gray-800 transition-colors"
+            className="flex-1 py-1 text-[10px] font-semibold bg-black text-white rounded-full hover:bg-gray-800 transition-colors"
           >
-            Edit
+            Editar
           </button>
           <button
             onClick={() => onDelete(product)}
-            className="flex-1 py-1.5 text-xs font-semibold border border-black text-black rounded-full hover:bg-gray-100 transition-colors"
+            className="flex-1 py-1 text-[10px] font-semibold border border-black text-black rounded-full hover:bg-gray-100 transition-colors"
           >
-            Delete
+            Eliminar
           </button>
         </div>
       </div>
