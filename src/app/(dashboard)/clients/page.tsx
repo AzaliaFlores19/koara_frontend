@@ -86,7 +86,7 @@ export default function ClientsPage() {
       setClients(response.data);
       setTotalClients(response.total);
     } catch (error) {
-      console.error("Error fetching clients:", error);
+      //console.error("Error fetching clients:", error);
       showNotice("Error al cargar clientes", "danger");
     } finally {
       setIsLoading(false);
@@ -105,7 +105,7 @@ export default function ClientsPage() {
           const data = await clientsApi.getHistory(historyClientId);
           setPurchaseHistory(data);
         } catch (error) {
-          console.error("Error fetching history:", error);
+          //console.error("Error fetching history:", error);
         } finally {
           setIsHistoryLoading(false);
         }
@@ -124,7 +124,7 @@ export default function ClientsPage() {
           const data = await clientsApi.getTopProducts(mostPurchasedClientId);
           setTopProducts(data);
         } catch (error) {
-          console.error("Error fetching top products:", error);
+         // console.error("Error fetching top products:", error);
         } finally {
           setIsTopProductsLoading(false);
         }
@@ -230,7 +230,7 @@ export default function ClientsPage() {
       showNotice("Cliente eliminado correctamente.", "danger");
       fetchClients();
     } catch (error) {
-      console.error("Error deleting client:", error);
+      //console.error("Error deleting client:", error);
       showNotice("Error al eliminar el cliente", "danger");
     }
   };

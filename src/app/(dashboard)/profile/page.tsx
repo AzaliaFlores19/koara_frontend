@@ -11,14 +11,12 @@ import { clearAuth } from "@/lib/api/auth.api";
 export default function ProfilePage() {
   const router = useRouter();
 
-  // Estados de datos de usuario
   const [name, setName] = useState("User");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState(""); 
   const [role, setRole] = useState("EMPLOYEE");
   
   const [isEditing, setIsEditing] = useState(false);
-  // Guardar copia de seguridad por si el usuario cancela la edición
   const [backupData, setBackupData] = useState({ name: "", email: "", phone: "" }); 
 
   const [loading, setLoading] = useState(true);
@@ -29,12 +27,10 @@ export default function ProfilePage() {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [passwords, setPasswords] = useState({ current: "", newPass: "", confirm: "" });
 
-  // Estados independientes para mostrar/ocultar cada contraseña
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Función auxiliar para mostrar el toast centrado debajo de 'Información personal'
   const showTemporaryMessage = (type: "success" | "error", text: string, position: "top" | "bottom" = "bottom") => {
     if (position === "top") {
       setTopToast({ message: text, visible: true, type });
@@ -45,7 +41,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Cargar perfil usando el cliente Axios modular
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
@@ -55,7 +50,7 @@ export default function ProfilePage() {
 
         setName(user.name);
         setEmail(user.email);
-        setPhone(user.phone || ""); // <-- Cargar teléfono de la respuesta
+        setPhone(user.phone || ""); 
         setRole(user.role);
         setBackupData({ name: user.name, email: user.email, phone: user.phone || "" });
 
@@ -73,7 +68,6 @@ export default function ProfilePage() {
     fetchProfileData();
   }, []);
 
-  // Obtener las iniciales del nombre para el avatar circular
   const getInitials = (fullName: string) => {
     const parts = fullName.trim().split(/\s+/);
     if (parts.length === 0 || !parts[0]) return "U";
@@ -81,7 +75,6 @@ export default function ProfilePage() {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   };
 
-  // Guardar datos generales del perfil
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -89,7 +82,6 @@ export default function ProfilePage() {
       setTopToast((t) => ({ ...t, visible: false }));
       setBottomToast((t) => ({ ...t, visible: false }));
       
-      // <-- Se envía el 'phone' hacia el microservicio
       const updatedUser = await usersApi.updateProfile({ name, email, phone });
 
       setName(updatedUser.name);
@@ -112,17 +104,15 @@ export default function ProfilePage() {
     }
   };
 
-  // Cancelar la edición y restaurar los valores anteriores
   const handleCancelEdit = () => {
     setName(backupData.name);
     setEmail(backupData.email);
-    setPhone(backupData.phone); // <-- Restaurar teléfono del backup
+    setPhone(backupData.phone); 
     setIsEditing(false);
     setTopToast((t) => ({ ...t, visible: false }));
     setBottomToast((t) => ({ ...t, visible: false }));
   };
 
-  // Actualizar contraseña con validaciones fuertes
   const handleUpdatePassword = async () => {
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d\W_]{8,}$/;
 
