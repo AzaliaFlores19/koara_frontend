@@ -17,7 +17,7 @@ interface TableActionOptions {
 interface Column<T> {
   header: string;
   render: (item: T, actions: TableActionOptions) => React.ReactNode;
-  align?: "left" | "right";
+  align?: "left" | "center" | "right";
 }
 
 interface TableProps<T> {
@@ -168,7 +168,7 @@ export function Table<T extends { id: string | number }>({
                   <th
                     key={idx}
                     className={`px-8 py-5 text-sm font-bold text-black border-r border-black/10 last:border-r-0 ${
-                      col.align === "right" ? "text-right" : ""
+                      col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : ""
                     }`}
                   >
                     {col.header}
@@ -187,10 +187,10 @@ export function Table<T extends { id: string | number }>({
                       <td
                         key={idx}
                         className={`px-8 py-5 border-r border-slate-100 last:border-r-0 transition-transform duration-200 group-hover:translate-x-1 ${
-                          col.align === "right" ? "text-right" : ""
+                          col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : ""
                         }`}
                       >
-                        <div className="flex items-center">
+                        <div className={`flex items-center ${col.align === "center" ? "justify-center" : col.align === "right" ? "justify-end" : ""}`}>
                           {col.render(item, { openConfirm })}
                         </div>
                       </td>
