@@ -1,19 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import { ShoppingBag, Calendar, Wallet } from "lucide-react";
 
 const MOCK_DATA = [
-  { name: "Lia Fernanda Ramírez", purchases: 10, lastPurchase: "03-05-2025", total: 200.0 },
-  { name: "María López",          purchases: 8,  lastPurchase: "04-05-2025", total: 320.0 },
-  { name: "Ana Martínez",         purchases: 7,  lastPurchase: "05-05-2025", total: 280.0 },
-  { name: "Laura Sánchez",        purchases: 6,  lastPurchase: "06-05-2025", total: 240.0 },
-  { name: "Carlos Ruiz",          purchases: 5,  lastPurchase: "07-05-2025", total: 200.0 },
-  { name: "Pedro García",         purchases: 5,  lastPurchase: "08-05-2025", total: 180.0 },
-  { name: "Sofía Herrera",        purchases: 4,  lastPurchase: "09-05-2025", total: 160.0 },
-  { name: "Jorge Torres",         purchases: 3,  lastPurchase: "10-05-2025", total: 120.0 },
+  { id: "1", name: "Lia Fernanda Ramírez", purchases: 10, lastPurchase: "03-05-2025", total: 200.0 },
+  { id: "2", name: "María López",          purchases: 8,  lastPurchase: "04-05-2025", total: 320.0 },
+  { id: "3", name: "Ana Martínez",         purchases: 7,  lastPurchase: "05-05-2025", total: 280.0 },
+  { id: "4", name: "Laura Sánchez",        purchases: 6,  lastPurchase: "06-05-2025", total: 240.0 },
+  { id: "5", name: "Carlos Ruiz",          purchases: 5,  lastPurchase: "07-05-2025", total: 200.0 },
+  { id: "6", name: "Pedro García",         purchases: 5,  lastPurchase: "08-05-2025", total: 180.0 },
+  { id: "7", name: "Sofía Herrera",        purchases: 4,  lastPurchase: "09-05-2025", total: 160.0 },
+  { id: "8", name: "Jorge Torres",         purchases: 3,  lastPurchase: "10-05-2025", total: 120.0 },
 ];
 
 const ROWS_PER_PAGE = 6;
+
+function formatCurrency(n: number) {
+  return new Intl.NumberFormat("es-HN", { style: "currency", currency: "HNL", minimumFractionDigits: 2 }).format(n);
+}
 
 export default function FrequentShoppersTab() {
   const [page, setPage] = useState(1);
@@ -22,7 +27,7 @@ export default function FrequentShoppersTab() {
 
   return (
     <div className="flex flex-col gap-4 flex-1">
-      {/* Date filter bar */}
+      {/* Barra de filtro */}
       <div className="flex items-center gap-3 bg-white rounded-2xl p-3 border border-black flex-wrap">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <input
@@ -39,35 +44,41 @@ export default function FrequentShoppersTab() {
           Exportar
         </button>
         <button className="px-5 py-2 bg-black text-white rounded-full text-sm font-medium hover:bg-gray-800 transition-colors shrink-0">
-          Generar Reportes
+          Generar Reporte
         </button>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-3xl border border-black overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-[#f9c8d9]">
-              <th className="px-6 py-4 text-left font-semibold">Name</th>
-              <th className="px-6 py-4 text-center font-semibold">Purchases Made</th>
-              <th className="px-6 py-4 text-center font-semibold">Last Purchase</th>
-              <th className="px-6 py-4 text-right font-semibold">Total in Purchases</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {rows.map((r) => (
-              <tr key={r.name} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 font-medium">{r.name}</td>
-                <td className="px-6 py-4 text-center">{r.purchases}</td>
-                <td className="px-6 py-4 text-center">{r.lastPurchase}</td>
-                <td className="px-6 py-4 text-right">$ {r.total.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {rows.map((item) => (
+          <article
+            key={item.id}
+            className="flex min-h-36 flex-col justify-between rounded-[1.15rem] border-2 border-black bg-gradient-to-br from-white via-white to-[#FFF3FA] p-4 shadow-[0_8px_18px_rgba(112,58,97,0.10)] transition hover:-translate-y-1 hover:shadow-[0_14px_28px_rgba(112,58,97,0.16)]"
+          >
+            <div className="min-w-0">
+              <h2 className="break-words text-base font-black leading-tight text-black">
+                {item.name}
+              </h2>
+              <div className="mt-3 space-y-1 text-sm text-slate-700">
+                <p className="flex items-center gap-2">
+                  <ShoppingBag size={15} className="shrink-0 text-[#8C5E78]" />
+                  <span><span className="font-bold">{item.purchases}</span> compras realizadas</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <Calendar size={15} className="shrink-0 text-[#8C5E78]" />
+                  <span>Última compra: <span className="font-bold">{item.lastPurchase}</span></span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <Wallet size={15} className="shrink-0 text-[#8C5E78]" />
+                  <span>Total: <span className="font-bold">{formatCurrency(item.total)}</span></span>
+                </p>
+              </div>
+            </div>
+          </article>
+        ))}
       </div>
 
-      {/* Pagination */}
+      {/* Paginación */}
       <div className="flex items-center justify-center gap-2 mt-2">
         <button
           onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -81,9 +92,7 @@ export default function FrequentShoppersTab() {
             key={p}
             onClick={() => setPage(p)}
             className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
-              p === page
-                ? "bg-black text-white"
-                : "border border-black hover:bg-gray-100"
+              p === page ? "bg-black text-white" : "border border-black hover:bg-gray-100"
             }`}
           >
             {p}
