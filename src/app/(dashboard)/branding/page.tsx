@@ -7,6 +7,7 @@ import {
   Building2,
   CheckCircle2,
   ImagePlus,
+  Loader2,
   Mail,
   MapPin,
   Phone,
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
 import defaultLogo from "@/imports/logo_insta_2.jpg";
+import { Company, companyApi } from "@/services/company.service";
 
 type BrandingForm = {
   companyName: string;
@@ -29,41 +31,57 @@ type Notice = {
   message: string;
 };
 
-const STORAGE_KEY = "koara-branding-settings";
-
 const INITIAL_FORM: BrandingForm = {
-  companyName: "KOARA",
-  phone: "+504 9999-0000",
-  rtn: "08011999123456",
-  address: "Tegucigalpa, Honduras",
-  email: "adminkoara@gmail.com",
+  companyName: "",
+  phone: "",
+  rtn: "",
+  address: "",
+  email: "",
 };
+
+const formatCompanyForm = (company: Company): BrandingForm => ({
+  companyName: company.name,
+  phone: company.phone || "",
+  rtn: company.rtn,
+  address: company.address || "",
+  email: company.email || "",
+});
 
 export default function BrandingPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [form, setForm] = useState<BrandingForm>(INITIAL_FORM);
   const [logoPreview, setLogoPreview] = useState(defaultLogo.src);
   const [logoName, setLogoName] = useState("logo_koara.jpg");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
+    const fetchCompany = async () => {
+      setIsLoading(true);
+      try {
+        const company = await companyApi.get();
+        setCompanyId(company.id);
+        setForm(formatCompanyForm(company));
+        setCurrentLogoUrl(company.logo);
+        setLogoPreview(company.logo || defaultLogo.src);
+        setLogoName(company.logo ? "logo-empresa" : "logo_koara.jpg");
+      } catch (error: any) {
+        if (error?.response?.status !== 404) {
+          showNotice({
+            type: "error",
+            message: "No se pudieron cargar los datos de la empresa.",
+          });
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    try {
-      const parsed = JSON.parse(saved) as {
-        form?: Partial<BrandingForm>;
-        logoPreview?: string;
-        logoName?: string;
-      };
-
-      setForm({ ...INITIAL_FORM, ...parsed.form });
-      if (parsed.logoPreview) setLogoPreview(parsed.logoPreview);
-      if (parsed.logoName) setLogoName(parsed.logoName);
-    } catch {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
+    fetchCompany();
   }, []);
 
   const showNotice = (nextNotice: Notice) => {
@@ -73,6 +91,22 @@ export default function BrandingPage() {
 
   const updateField = (field: keyof BrandingForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const clearValidationMessage = (
+    event: FormEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    event.currentTarget.setCustomValidity("");
+  };
+
+  const setEmailValidationMessage = (event: FormEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+
+    input.setCustomValidity(
+      input.validity.valueMissing
+        ? "Por favor, ingresa el correo electronico de la empresa."
+        : "Por favor, ingresa un correo valido.",
+    );
   };
 
   const validateForm = () => {
@@ -125,6 +159,7 @@ export default function BrandingPage() {
       if (typeof reader.result !== "string") return;
       setLogoPreview(reader.result);
       setLogoName(file.name);
+      setLogoFile(file);
       showNotice({
         type: "success",
         message: "Logo cargado correctamente.",
@@ -134,8 +169,9 @@ export default function BrandingPage() {
   };
 
   const handleResetLogo = () => {
-    setLogoPreview(defaultLogo.src);
-    setLogoName("logo_koara.jpg");
+    setLogoPreview(currentLogoUrl || defaultLogo.src);
+    setLogoName(currentLogoUrl ? "logo-empresa" : "logo_koara.jpg");
+    setLogoFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -145,22 +181,47 @@ export default function BrandingPage() {
 
     setIsSaving(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 550));
+    try {
+      const logoUrl = logoFile
+        ? await companyApi.uploadLogo(logoFile)
+        : currentLogoUrl || undefined;
 
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        form,
-        logoPreview,
-        logoName,
-      }),
-    );
+      const payload = {
+        name: form.companyName.trim(),
+        rtn: form.rtn.trim(),
+        address: form.address.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        ...(logoUrl ? { logo: logoUrl } : {}),
+      };
 
-    setIsSaving(false);
-    showNotice({
-      type: "success",
-      message: "Cambios guardados correctamente.",
-    });
+      const savedCompany = companyId
+        ? await companyApi.update(companyId, payload)
+        : await companyApi.create(payload);
+
+      setCompanyId(savedCompany.id);
+      setForm(formatCompanyForm(savedCompany));
+      setCurrentLogoUrl(savedCompany.logo);
+      setLogoPreview(savedCompany.logo || defaultLogo.src);
+      setLogoName(savedCompany.logo ? "logo-empresa" : "logo_koara.jpg");
+      setLogoFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+
+      showNotice({
+        type: "success",
+        message: "Cambios guardados correctamente.",
+      });
+    } catch (error: any) {
+      const message = error?.response?.data?.message;
+      showNotice({
+        type: "error",
+        message: Array.isArray(message)
+          ? message[0]
+          : message || "No se pudieron guardar los datos de la empresa.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -199,154 +260,190 @@ export default function BrandingPage() {
               )}
             </div>
 
-            <div className="grid gap-5 lg:grid-cols-[minmax(240px,0.72fr)_minmax(0,1fr)]">
-              <div className="rounded-[1.15rem] border-2 border-black bg-[#F6DEEB] p-5">
-                <label className="text-sm font-black uppercase tracking-[0.18em] text-black">
-                  Logotipo
-                </label>
+            {isLoading ? (
+              <div className="flex min-h-80 items-center justify-center">
+                <Loader2 className="h-10 w-10 animate-spin text-[#8C5E78]" />
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-5 lg:grid-cols-[minmax(240px,0.72fr)_minmax(0,1fr)]">
+                  <div className="rounded-[1.15rem] border-2 border-black bg-[#F6DEEB] p-5">
+                    <label className="text-sm font-black uppercase tracking-[0.18em] text-black">
+                      Logotipo
+                    </label>
 
-                <div className="mt-5 flex flex-col items-center text-center">
-                  <div className="relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-2 border-black bg-white shadow-[0_8px_0_rgba(0,0,0,0.12)]">
-                    <img
-                      src={logoPreview}
-                      alt="Logo de la empresa"
-                      className="h-full w-full object-cover"
-                    />
+                    <div className="mt-5 flex flex-col items-center text-center">
+                      <div className="relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-2 border-black bg-white shadow-[0_8px_0_rgba(0,0,0,0.12)]">
+                        <img
+                          src={logoPreview}
+                          alt="Logo de la empresa"
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+
+                      <p className="mt-4 max-w-full truncate text-sm font-bold text-slate-700">
+                        {logoName}
+                      </p>
+
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg"
+                        onChange={handleLogoChange}
+                        className="hidden"
+                      />
+
+                      <div className="mt-5 flex w-full gap-3">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-black bg-black px-4 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 active:translate-y-0"
+                          disabled={isSaving}
+                        >
+                          <ImagePlus size={17} />
+                          Subir
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleResetLogo}
+                          className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-black bg-white text-black transition hover:bg-[#F4B8D4]"
+                          aria-label="Restablecer logo"
+                          title="Restablecer logo"
+                          disabled={isSaving}
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
-                  <p className="mt-4 max-w-full truncate text-sm font-bold text-slate-700">
-                    {logoName}
-                  </p>
+                  <div className="grid gap-4">
+                    <label className="grid gap-2">
+                      <span className="text-sm font-black uppercase tracking-[0.16em] text-black">
+                        Nombre
+                      </span>
+                      <div className="relative">
+                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8C5E78]" size={18} />
+                        <input
+                          value={form.companyName}
+                          onChange={(event) => updateField("companyName", event.target.value)}
+                          onInvalid={(event) =>
+                            event.currentTarget.setCustomValidity(
+                              "Por favor, ingresa el nombre de la empresa.",
+                            )
+                          }
+                          onInput={clearValidationMessage}
+                          className="w-full rounded-2xl border-2 border-black bg-white px-12 py-3 text-sm font-bold text-black outline-none transition placeholder:text-black/35 focus:ring-4 focus:ring-[#F4B8D4]/45"
+                          placeholder="Nombre de la empresa"
+                          required
+                        />
+                      </div>
+                    </label>
 
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg"
-                    onChange={handleLogoChange}
-                    className="hidden"
-                  />
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <label className="grid gap-2">
+                        <span className="text-sm font-black uppercase tracking-[0.16em] text-black">
+                          Teléfono
+                        </span>
+                        <div className="relative">
+                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8C5E78]" size={18} />
+                          <input
+                            value={form.phone}
+                            onChange={(event) => updateField("phone", event.target.value)}
+                            onInvalid={(event) =>
+                              event.currentTarget.setCustomValidity(
+                                "Por favor, ingresa el telefono de la empresa.",
+                              )
+                            }
+                            onInput={clearValidationMessage}
+                            className="w-full rounded-2xl border-2 border-black bg-white px-12 py-3 text-sm font-bold text-black outline-none transition placeholder:text-black/35 focus:ring-4 focus:ring-[#F4B8D4]/45"
+                            placeholder="+504 0000-0000"
+                            required
+                          />
+                        </div>
+                      </label>
 
-                  <div className="mt-5 flex w-full gap-3">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-black bg-black px-4 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 active:translate-y-0"
-                    >
-                      <ImagePlus size={17} />
-                      Subir
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleResetLogo}
-                      className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-black bg-white text-black transition hover:bg-[#F4B8D4]"
-                      aria-label="Restablecer logo"
-                      title="Restablecer logo"
-                    >
-                      <X size={18} />
-                    </button>
+                      <label className="grid gap-2">
+                        <span className="text-sm font-black uppercase tracking-[0.16em] text-black">
+                          RTN
+                        </span>
+                        <div className="relative">
+                          <BadgeCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8C5E78]" size={18} />
+                          <input
+                            value={form.rtn}
+                            onChange={(event) =>
+                              updateField("rtn", event.target.value.replace(/\D/g, "").slice(0, 14))
+                            }
+                            onInvalid={(event) =>
+                              event.currentTarget.setCustomValidity(
+                                "Por favor, ingresa el RTN de la empresa.",
+                              )
+                            }
+                            onInput={clearValidationMessage}
+                            className="w-full rounded-2xl border-2 border-black bg-white px-12 py-3 text-sm font-bold text-black outline-none transition placeholder:text-black/35 focus:ring-4 focus:ring-[#F4B8D4]/45"
+                            inputMode="numeric"
+                            placeholder="00000000000000"
+                            required
+                          />
+                        </div>
+                      </label>
+                    </div>
+
+                    <label className="grid gap-2">
+                      <span className="text-sm font-black uppercase tracking-[0.16em] text-black">
+                        Dirección
+                      </span>
+                      <div className="relative">
+                        <MapPin className="absolute left-4 top-4 text-[#8C5E78]" size={18} />
+                        <textarea
+                          value={form.address}
+                          onChange={(event) => updateField("address", event.target.value)}
+                          onInvalid={(event) =>
+                            event.currentTarget.setCustomValidity(
+                              "Por favor, ingresa la direccion de la empresa.",
+                            )
+                          }
+                          onInput={clearValidationMessage}
+                          className="min-h-28 w-full resize-none rounded-2xl border-2 border-black bg-white px-12 py-3 text-sm font-bold text-black outline-none transition placeholder:text-black/35 focus:ring-4 focus:ring-[#F4B8D4]/45"
+                          placeholder="Dirección de la empresa"
+                          required
+                        />
+                      </div>
+                    </label>
+
+                    <label className="grid gap-2">
+                      <span className="text-sm font-black uppercase tracking-[0.16em] text-black">
+                        Correo electrónico
+                      </span>
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8C5E78]" size={18} />
+                        <input
+                          value={form.email}
+                          onChange={(event) => updateField("email", event.target.value)}
+                          onInvalid={setEmailValidationMessage}
+                          onInput={clearValidationMessage}
+                          className="w-full rounded-2xl border-2 border-black bg-white px-12 py-3 text-sm font-bold text-black outline-none transition placeholder:text-black/35 focus:ring-4 focus:ring-[#F4B8D4]/45"
+                          placeholder="correo@empresa.com"
+                          type="email"
+                          required
+                        />
+                      </div>
+                    </label>
                   </div>
                 </div>
-              </div>
 
-              <div className="grid gap-4">
-                <label className="grid gap-2">
-                  <span className="text-sm font-black uppercase tracking-[0.16em] text-black">
-                    Nombre
-                  </span>
-                  <div className="relative">
-                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8C5E78]" size={18} />
-                    <input
-                      value={form.companyName}
-                      onChange={(event) => updateField("companyName", event.target.value)}
-                      className="w-full rounded-2xl border-2 border-black bg-white px-12 py-3 text-sm font-bold text-black outline-none transition placeholder:text-black/35 focus:ring-4 focus:ring-[#F4B8D4]/45"
-                      placeholder="Nombre de la empresa"
-                      required
-                    />
-                  </div>
-                </label>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <label className="grid gap-2">
-                    <span className="text-sm font-black uppercase tracking-[0.16em] text-black">
-                      Teléfono
-                    </span>
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8C5E78]" size={18} />
-                      <input
-                        value={form.phone}
-                        onChange={(event) => updateField("phone", event.target.value)}
-                        className="w-full rounded-2xl border-2 border-black bg-white px-12 py-3 text-sm font-bold text-black outline-none transition placeholder:text-black/35 focus:ring-4 focus:ring-[#F4B8D4]/45"
-                        placeholder="+504 0000-0000"
-                        required
-                      />
-                    </div>
-                  </label>
-
-                  <label className="grid gap-2">
-                    <span className="text-sm font-black uppercase tracking-[0.16em] text-black">
-                      RTN
-                    </span>
-                    <div className="relative">
-                      <BadgeCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8C5E78]" size={18} />
-                      <input
-                        value={form.rtn}
-                        onChange={(event) =>
-                          updateField("rtn", event.target.value.replace(/\D/g, "").slice(0, 14))
-                        }
-                        className="w-full rounded-2xl border-2 border-black bg-white px-12 py-3 text-sm font-bold text-black outline-none transition placeholder:text-black/35 focus:ring-4 focus:ring-[#F4B8D4]/45"
-                        inputMode="numeric"
-                        placeholder="00000000000000"
-                        required
-                      />
-                    </div>
-                  </label>
+                <div className="mt-7 flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-7 py-3 text-sm font-black text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 active:translate-y-0"
+                  >
+                    {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
+                    {isSaving ? "Guardando..." : "Aplicar cambios"}
+                  </button>
                 </div>
-
-                <label className="grid gap-2">
-                  <span className="text-sm font-black uppercase tracking-[0.16em] text-black">
-                    Dirección
-                  </span>
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-4 text-[#8C5E78]" size={18} />
-                    <textarea
-                      value={form.address}
-                      onChange={(event) => updateField("address", event.target.value)}
-                      className="min-h-28 w-full resize-none rounded-2xl border-2 border-black bg-white px-12 py-3 text-sm font-bold text-black outline-none transition placeholder:text-black/35 focus:ring-4 focus:ring-[#F4B8D4]/45"
-                      placeholder="Dirección de la empresa"
-                      required
-                    />
-                  </div>
-                </label>
-
-                <label className="grid gap-2">
-                  <span className="text-sm font-black uppercase tracking-[0.16em] text-black">
-                    Correo electrónico
-                  </span>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8C5E78]" size={18} />
-                    <input
-                      value={form.email}
-                      onChange={(event) => updateField("email", event.target.value)}
-                      className="w-full rounded-2xl border-2 border-black bg-white px-12 py-3 text-sm font-bold text-black outline-none transition placeholder:text-black/35 focus:ring-4 focus:ring-[#F4B8D4]/45"
-                      placeholder="correo@empresa.com"
-                      type="email"
-                      required
-                    />
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            <div className="mt-7 flex justify-end">
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-7 py-3 text-sm font-black text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 active:translate-y-0"
-              >
-                <Upload size={18} />
-                {isSaving ? "Guardando..." : "Aplicar cambios"}
-              </button>
-            </div>
+              </>
+            )}
           </form>
         </section>
       </main>
