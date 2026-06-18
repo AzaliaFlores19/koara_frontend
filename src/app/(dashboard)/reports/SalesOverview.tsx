@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { CheckCircle } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
+import FrequentShoppersTab from "./FrequentShoppers";
 import { reportsApi, type AnalyticsData } from "@/services/reports.service";
 import BestSellersTab from "./BestSellers";
 
@@ -153,14 +154,6 @@ function SalesTab() {
   return (
     <div className="flex items-center justify-center flex-1 text-gray-400 text-sm">
       Ventas — próximamente
-    </div>
-  );
-}
-
-function FrequentShoppersTab() {
-  return (
-    <div className="flex items-center justify-center flex-1 text-gray-400 text-sm">
-      Clientes Frecuentes — próximamente
     </div>
   );
 }
