@@ -10,6 +10,8 @@ export const apiClient = axios.create({
   },
 });
 
+export const api = apiClient;
+
 apiClient.interceptors.request.use(
   (config) => {
     if (config.url?.startsWith('/')) {
