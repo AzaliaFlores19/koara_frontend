@@ -16,14 +16,14 @@ export const apiClient = axios.create({
 
 // Lista de usuarios centralizada para usar tanto en login como en la consulta de usuarios
 const MOCK_USERS = [
-  { id: "1", name: "Admin User", email: "admin@koara.com", role: "Admin", password: "Password123" },
-  { id: "2", name: "Store Manager", email: "manager@koara.com", role: "Admin", password: "Password123" },
-  { id: "3", name: "Sales Rep", email: "sales@koara.com", role: "Employee", password: "Password123" },
-  { id: "4", name: "Support Staff", email: "support@koara.com", role: "Employee", password: "Password123" },
-  { id: "5", name: "Sales Rep", email: "sales2@koara.com", role: "Employee", password: "Password123" },
-  { id: "6", name: "Admin User", email: "admin2@koara.com", role: "Admin", password: "Password123" },
-  { id: "7", name: "Admin User", email: "admin3@koara.com", role: "Admin", password: "Password123" },
-  { id: "8", name: "Admin User", email: "admin4@koara.com", role: "Admin", password: "Password123" },
+  { id: "1", name: "Admin User", email: "admin@koara.com", role: "Admin", password: "Password123", base_code: "ADM-001" },
+  { id: "2", name: "Store Manager", email: "manager@koara.com", role: "Admin", password: "Password123", base_code: "MGR-001" },
+  { id: "3", name: "Sales Rep", email: "sales@koara.com", role: "Employee", password: "Password123", base_code: "SLS-001" },
+  { id: "4", name: "Support Staff", email: "support@koara.com", role: "Employee", password: "Password123", base_code: "SPT-001" },
+  { id: "5", name: "Sales Rep", email: "sales2@koara.com", role: "Employee", password: "Password123", base_code: "SLS-002" },
+  { id: "6", name: "Admin User", email: "admin2@koara.com", role: "Admin", password: "Password123", base_code: "ADM-002" },
+  { id: "7", name: "Admin User", email: "admin3@koara.com", role: "Admin", password: "Password123", base_code: "ADM-003" },
+  { id: "8", name: "Admin User", email: "admin4@koara.com", role: "Admin", password: "Password123", base_code: "ADM-004" },
 ];
 
 let MOCK_CAI_CODES: CAICode[] = [
@@ -282,10 +282,7 @@ if (url.includes("auth/forgot-password")) {
           todaySales: { current: "$1,240.00", yesterday: "$980.00", thisMonth: "$24,500.00" },
           invoices: { emitted: 48, paid: 42 }
         },
-        status: 200,
-        statusText: "OK",
-        headers: config.headers,
-        config,
+        status: 200, statusText: "OK", headers: config.headers, config,
       });
     }
 

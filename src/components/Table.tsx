@@ -208,7 +208,7 @@ export function Table<T extends { id: string | number }>({
                         <span className="text-xl">?</span>
                       </div>
                       <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">
-                        No results found
+                        No se encontraron datos para mostrar
                       </p>
                     </div>
                   </td>
