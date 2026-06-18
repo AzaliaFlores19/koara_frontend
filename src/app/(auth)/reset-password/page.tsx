@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, Suspense, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
@@ -35,6 +35,16 @@ function ResetPasswordContent() {
     token ? null : "El enlace de recuperación no contiene un token válido.",
   );
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!success) return;
+
+    const redirectTimeout = window.setTimeout(() => {
+      router.push("/login");
+    }, 2200);
+
+    return () => window.clearTimeout(redirectTimeout);
+  }, [router, success]);
 
   const inputCls =
     "w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm text-gray-800 transition-all placeholder:text-gray-300 focus:outline-none focus:ring-4 focus:ring-[#F4B8D4]/35";
@@ -190,7 +200,7 @@ function ResetPasswordContent() {
                   Contraseña actualizada
                 </h2>
                 <p className="mx-auto mb-6 max-w-xs text-sm font-medium text-gray-400">
-                  Tu contraseña fue restablecida correctamente. Ya puedes iniciar sesión con tus nuevas credenciales.
+                  Tu contraseña fue restablecida correctamente. Te redirigiremos al inicio de sesión.
                 </p>
                 <button
                   type="button"
