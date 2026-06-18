@@ -10,13 +10,23 @@ import {
   CategoryFormModal,
   ConfirmDeleteModal,
 } from "@/components/inventory/CategoryModals";
-import { ProductModal, type ProductFormData } from "@/components/inventory/ProductModal";
+import {
+  ProductModal,
+  type ProductFormData,
+} from "@/components/inventory/ProductModal";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { productsApi } from "@/services/products.service";
 import { categoriesApi, type Category } from "@/services/categories.service";
 
 const EMPTY_FORM: ProductFormData = {
-  name: "", code: "", description: "", price: "", stock: "", minStock: "", category: "", image: "",
+  name: "",
+  code: "",
+  description: "",
+  price: "",
+  stock: "",
+  minStock: "",
+  category: "",
+  image: "",
 };
 
 const PRODUCTS_PER_PAGE = 12;
@@ -50,7 +60,10 @@ export default function ProductsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [confirmData, setConfirmData] = useState<{ message: string; onConfirm: () => void } | null>(null);
+  const [confirmData, setConfirmData] = useState<{
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
 
@@ -69,7 +82,12 @@ export default function ProductsPage() {
       const catId = activeCategory
         ? apiCategories.find((c) => c.name === activeCategory)?.id
         : undefined;
-      const result = await productsApi.getAll(currentPage, PRODUCTS_PER_PAGE, search || undefined, catId);
+      const result = await productsApi.getAll(
+        currentPage,
+        PRODUCTS_PER_PAGE,
+        search || undefined,
+        catId,
+      );
       setProducts(result.data);
       setTotalProducts(result.total);
     } catch {
@@ -79,12 +97,19 @@ export default function ProductsPage() {
     }
   }, [currentPage, search, activeCategory, apiCategories]);
 
-  useEffect(() => { fetchCategories(); }, [fetchCategories]);
-  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setDropdownOpen(false);
       }
     }
@@ -179,7 +204,9 @@ export default function ProductsPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const categoryId = apiCategories.find((c) => c.name === formData.category)?.id;
+      const categoryId = apiCategories.find(
+        (c) => c.name === formData.category,
+      )?.id;
       if (!categoryId) {
         showToast("Selecciona una categoría válida.");
         setIsSubmitting(false);
@@ -237,11 +264,13 @@ export default function ProductsPage() {
     <DashboardLayout>
       <div className="min-h-screen w-full">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 flex flex-col gap-6">
-
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold">Lista de Productos</h1>
             <div className="flex items-center gap-2">
-              <button onClick={handleOpenAddModal} className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors">
+              <button
+                onClick={handleOpenAddModal}
+                className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
+              >
                 <Plus size={15} />
                 Agregar Producto
               </button>
@@ -256,7 +285,10 @@ export default function ProductsPage() {
 
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
-              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search
+                size={15}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+              />
               <input
                 type="text"
                 placeholder="Buscar producto"
@@ -272,15 +304,24 @@ export default function ProductsPage() {
                 className="flex items-center gap-2 px-4 py-2.5 bg-white text-black text-sm font-medium rounded-full border border-black/20 hover:bg-gray-100 transition-colors whitespace-nowrap"
               >
                 {activeCategory ?? "Categoría"}
-                <ChevronDown size={14} className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  size={14}
+                  className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
+                />
               </button>
 
               {dropdownOpen && (
                 <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-lg border border-black/5 py-1 z-20">
                   <button
-                    onClick={() => { setActiveCategory(null); setCurrentPage(1); setDropdownOpen(false); }}
+                    onClick={() => {
+                      setActiveCategory(null);
+                      setCurrentPage(1);
+                      setDropdownOpen(false);
+                    }}
                     className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                      activeCategory === null ? "font-semibold bg-koara-primary/30" : "hover:bg-gray-50"
+                      activeCategory === null
+                        ? "font-semibold bg-koara-primary/30"
+                        : "hover:bg-gray-50"
                     }`}
                   >
                     Todas
@@ -288,9 +329,14 @@ export default function ProductsPage() {
                   {categoryNames.map((cat) => (
                     <button
                       key={cat}
-                      onClick={() => { handleCategoryFilter(cat); setDropdownOpen(false); }}
+                      onClick={() => {
+                        handleCategoryFilter(cat);
+                        setDropdownOpen(false);
+                      }}
                       className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                        activeCategory === cat ? "font-semibold bg-koara-primary/30" : "hover:bg-gray-50"
+                        activeCategory === cat
+                          ? "font-semibold bg-koara-primary/30"
+                          : "hover:bg-gray-50"
                       }`}
                     >
                       {cat}
@@ -302,9 +348,11 @@ export default function ProductsPage() {
           </div>
 
           {isLoading ? (
-            <p className="text-center text-gray-400 py-16">Cargando productos...</p>
+            <p className="text-center text-gray-400 py-16">
+              Cargando productos...
+            </p>
           ) : products.length > 0 ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
               {products.map((product) => (
                 <ProductCard
                   key={product.id}
@@ -315,7 +363,9 @@ export default function ProductsPage() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-gray-500 py-16">No se encontraron productos.</p>
+            <p className="text-center text-gray-500 py-16">
+              No se encontraron productos.
+            </p>
           )}
 
           {totalPages > 1 && (
@@ -325,7 +375,6 @@ export default function ProductsPage() {
               onPageChange={setCurrentPage}
             />
           )}
-
         </div>
       </div>
 
@@ -333,16 +382,28 @@ export default function ProductsPage() {
         <ManageCategoriesModal
           categories={categoryNames}
           onClose={() => setShowManageCategories(false)}
-          onAdd={() => { setShowManageCategories(false); setShowAddCategory(true); }}
-          onEdit={(cat) => { setShowManageCategories(false); setEditingCategory(cat); }}
-          onDelete={(cat) => { setShowManageCategories(false); setDeletingCategory(cat); }}
+          onAdd={() => {
+            setShowManageCategories(false);
+            setShowAddCategory(true);
+          }}
+          onEdit={(cat) => {
+            setShowManageCategories(false);
+            setEditingCategory(cat);
+          }}
+          onDelete={(cat) => {
+            setShowManageCategories(false);
+            setDeletingCategory(cat);
+          }}
         />
       )}
 
       {showAddCategory && (
         <CategoryFormModal
           mode="add"
-          onClose={() => { setShowAddCategory(false); setShowManageCategories(true); }}
+          onClose={() => {
+            setShowAddCategory(false);
+            setShowManageCategories(true);
+          }}
           onConfirm={handleAddCategory}
         />
       )}
@@ -351,14 +412,20 @@ export default function ProductsPage() {
         <CategoryFormModal
           mode="edit"
           initialValue={editingCategory}
-          onClose={() => { setEditingCategory(null); setShowManageCategories(true); }}
+          onClose={() => {
+            setEditingCategory(null);
+            setShowManageCategories(true);
+          }}
           onConfirm={handleEditCategory}
         />
       )}
 
       {deletingCategory && (
         <ConfirmDeleteModal
-          onClose={() => { setDeletingCategory(null); setShowManageCategories(true); }}
+          onClose={() => {
+            setDeletingCategory(null);
+            setShowManageCategories(true);
+          }}
           onConfirm={handleDeleteCategory}
         />
       )}
