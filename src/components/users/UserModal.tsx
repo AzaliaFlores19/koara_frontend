@@ -1,6 +1,8 @@
 "use client";
 
-import { Loader2, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { Loader2, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { User } from "@/lib/api/auth";
 
 interface UserModalProps {
@@ -22,15 +24,22 @@ export function UserModal({
   onSubmit,
   isSubmitting,
 }: UserModalProps) {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 sm:pt-16">
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 sm:pt-16 overflow-y-auto">
       <div 
-        className="absolute inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade" 
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade" 
         onClick={onClose}
       />
-      <div className="koara-modal-card animate-koara-modal">
+      <div className="koara-modal-card animate-koara-modal relative z-10">
         <h2 className="text-2xl font-bold mb-6 text-black">
           {mode === "add" ? "Agregar Usuario" : "Editar Usuario"}
         </h2>
@@ -74,16 +83,25 @@ export function UserModal({
           </div>
 
           {mode === "add" && (
-            <div className="space-y-2">
+            <div className="space-y-1">
               <label className="text-xs font-bold text-black uppercase tracking-wider">Contraseña</label>
-              <input
-                type="password"
-                required={mode === "add"}
-                value={formData.password || ""}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="koara-input-field"
-                placeholder="Mín. 8 caracteres, 1 mayúscula, 1 minúscula, 1 número"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required={mode === "add"}
+                  value={formData.password || ""}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="koara-input-field"
+                  placeholder="Mín. 8 caracteres, 1 mayúsc., 1 minúsc., 1 número"
+                />
+                <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
             </div>
           )}
           
@@ -120,6 +138,7 @@ export function UserModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

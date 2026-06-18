@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Plus, Power, Pencil } from "lucide-react";
 import { CAICode } from "@/lib/types/index";
 
@@ -23,7 +24,13 @@ export function CaiCodesModal({
   const [editingCode, setEditingCode] = useState<CAICode | null>(null);
   const [codeForm, setCodeForm] = useState({ cai_code: "" });
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   // Función para formatear el CAI automáticamente
   const formatCaiCode = (value: string) => {
@@ -75,11 +82,11 @@ export function CaiCodesModal({
     setEditingCode(null);
   };
 
-  return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 sm:pt-16">
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade" onClick={onClose} />
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 sm:pt-16 overflow-y-auto">
+      <div className="fixed inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade" onClick={onClose} />
 
-      <div className="koara-modal-card animate-koara-modal relative z-10 w-full max-w-md">
+      <div className="koara-modal-card animate-koara-modal relative z-10 w-full max-w-md my-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-black">
             {showForm ? (editingCode ? "Editar Código CAI" : "Nuevo Código CAI") : "Registro de Códigos CAI"}

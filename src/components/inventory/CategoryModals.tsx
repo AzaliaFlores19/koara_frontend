@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
 
 // ── Manage Categories ───────────────────────────────────────────────────────
@@ -19,13 +20,17 @@ export function ManageCategoriesModal({
   onEdit,
   onDelete,
 }: ManageCategoriesModalProps) {
-  return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 sm:pt-16">
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 sm:pt-16 overflow-y-auto">
       <div
-        className="absolute inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade"
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade"
         onClick={onClose}
       />
-      <div className="koara-modal-card animate-koara-modal">
+      <div className="koara-modal-card animate-koara-modal relative z-10 my-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-black">Manage Categories</h2>
           <button onClick={onAdd} className="koara-btn-black">
@@ -65,7 +70,8 @@ export function ManageCategoriesModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -85,6 +91,8 @@ export function CategoryFormModal({
 }: CategoryFormModalProps) {
   const [value, setValue] = useState(initialValue);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const handleConfirm = async () => {
     if (!value.trim()) return;
@@ -94,13 +102,15 @@ export function CategoryFormModal({
     setIsSubmitting(false);
   };
 
-  return (
-    <div className="fixed inset-0 z-[70] flex items-start justify-center p-4 sm:pt-16">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[70] flex items-start justify-center p-4 sm:pt-16 overflow-y-auto">
       <div
-        className="absolute inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade"
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade"
         onClick={onClose}
       />
-      <div className="koara-modal-card animate-koara-modal">
+      <div className="koara-modal-card animate-koara-modal relative z-10 my-auto">
         <h2 className="text-2xl font-bold mb-6 text-black">
           {mode === "add" ? "Add Category" : "Edit Category"}
         </h2>
@@ -133,7 +143,8 @@ export function CategoryFormModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -144,13 +155,17 @@ interface ConfirmDeleteModalProps {
 }
 
 export function ConfirmDeleteModal({ onClose, onConfirm }: ConfirmDeleteModalProps) {
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade"
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade"
         onClick={onClose}
       />
-      <div className="koara-modal-card animate-koara-modal mx-4">
+      <div className="koara-modal-card animate-koara-modal mx-4 relative z-10">
         <p className="font-bold text-slate-700 mb-8">
           Are you sure you want to delete this category? This action cannot be undone.
         </p>
@@ -169,6 +184,7 @@ export function ConfirmDeleteModal({ onClose, onConfirm }: ConfirmDeleteModalPro
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

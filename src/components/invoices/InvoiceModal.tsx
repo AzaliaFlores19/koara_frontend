@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Plus, X, Loader2, Download, ArrowLeft, ChevronDown } from "lucide-react";
 import { Invoice, InvoiceItem } from "@/lib/types/models";
 
@@ -122,7 +123,13 @@ export function InvoiceModal({
     setItems(items.filter((_, i) => i !== index));
   };
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const renderContent = () => {
     if (localMode === "view" && invoice) {
@@ -403,7 +410,7 @@ export function InvoiceModal({
     );
   };
 
-  return (
+  return createPortal(
     <>
       {/* Fixed backdrop */}
       <div
@@ -419,6 +426,7 @@ export function InvoiceModal({
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

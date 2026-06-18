@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Loader2 } from "lucide-react";
 
 export interface ProductFormData {
@@ -34,6 +35,12 @@ export function ProductModal({
   onSubmit,
   isSubmitting,
 }: ProductModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Lock body scroll while open
   useEffect(() => {
     if (!isOpen) return;
@@ -41,9 +48,9 @@ export function ProductModal({
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <>
       {/* Fixed backdrop — always covers full screen */}
       <div
@@ -165,6 +172,7 @@ export function ProductModal({
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { CAICode } from "@/lib/types/index";
 
@@ -29,6 +30,11 @@ export function CaiRangeModal({
   onClose,
   onSubmit,
 }: CaiRangeModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   // 1. Bloquear el scroll de la página de fondo cuando este modal se abre
   useEffect(() => {
@@ -39,7 +45,7 @@ export function CaiRangeModal({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   // Función para formatear el prefijo base automáticamente (000-001-01)
   const formatBaseCode = (value: string) => {
@@ -60,7 +66,7 @@ export function CaiRangeModal({
   };
 
 
-      return (
+      return createPortal(
     <>
       {/* 1. BACKDROP CORREGIDO: Usamos min-h-screen y h-full para blindar ese pedacito de abajo */}
       <div 
@@ -192,7 +198,8 @@ export function CaiRangeModal({
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 

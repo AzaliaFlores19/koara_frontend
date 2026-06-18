@@ -9,6 +9,7 @@ import { User } from "@/lib/api/auth";
 import { UserModal } from "@/components/users/UserModal";
 import { Table } from "@/components/Table";
 import { isAdmin as checkIsAdmin } from "@/lib/auth";
+import { AlertModal } from "@/components/AlertModal";
 
 export default function UsersPage() {
   const router = useRouter();
@@ -17,6 +18,16 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [alertConfig, setAlertConfig] = useState<{
+    isOpen: boolean;
+    title?: string;
+    message: string;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
@@ -101,7 +112,11 @@ export default function UsersPage() {
         const password = formData.password || "";
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
         if (!passwordRegex.test(password)) {
-          alert("La contraseña debe tener al menos 8 caracteres e incluir al menos una letra mayúscula, una letra minúscula y un número.");
+          setAlertConfig({
+            isOpen: true,
+            title: "Contraseña Inválida",
+            message: "La contraseña debe tener al menos 8 caracteres e incluir al menos una letra mayúscula, una letra minúscula y un número.",
+          });
           setIsSubmitting(false);
           return;
         }
@@ -119,7 +134,11 @@ export default function UsersPage() {
     } catch (err: any) {
       console.error("Error saving user:", err);
       const errorMessage = err.response?.data?.message || "Error al guardar los cambios del usuario.";
-      alert(errorMessage);
+      setAlertConfig({
+        isOpen: true,
+        title: "Error de Guardado",
+        message: errorMessage,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -131,7 +150,11 @@ export default function UsersPage() {
       await fetchUsers();
     } catch (err) {
       console.error("Error deactivating user:", err);
-      alert("Error al desactivar el usuario.");
+      setAlertConfig({
+        isOpen: true,
+        title: "Error de Eliminación",
+        message: "Error al desactivar el usuario.",
+      });
     }
   };
 
@@ -243,6 +266,13 @@ export default function UsersPage() {
           onClose={handleCloseModal}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
+        />
+
+        <AlertModal
+          isOpen={alertConfig.isOpen}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })}
         />
       </div>
     </DashboardLayout>
