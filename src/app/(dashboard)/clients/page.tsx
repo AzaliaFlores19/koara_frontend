@@ -388,12 +388,15 @@ export default function ClientsPage() {
         </section>
 
         {isAddModalOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto p-4 py-6 no-scrollbar">
             <div
               className="absolute inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade"
               onClick={closeAddModal}
             />
-            <div className="koara-modal-card no-scrollbar max-h-[calc(100vh-2rem)] overflow-y-auto animate-koara-modal">
+            <div
+              className="koara-modal-card relative z-10 no-scrollbar animate-koara-modal"
+              style={{ maxHeight: "calc(100vh - 3rem)", overflowY: "auto" }}
+            >
               <h2 className="mb-6 text-2xl font-bold text-black">
                 {clientModalMode === "add" ? "Add Client" : "Edit Client"}
               </h2>
@@ -516,12 +519,12 @@ export default function ClientsPage() {
         />
 
         {selectedHistoryClient && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto p-4 py-6 no-scrollbar">
             <div
               className="absolute inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade"
               onClick={() => setHistoryClientId(null)}
             />
-            <div className="relative w-full max-w-2xl rounded-[1.75rem] border-2 border-black bg-[#F6DEEB] p-6 shadow-2xl no-scrollbar max-h-[calc(100vh-2rem)] overflow-y-auto animate-koara-modal">
+            <div className="relative z-10 w-full max-w-2xl rounded-[1.75rem] border-2 border-black bg-[#F6DEEB] p-6 shadow-2xl no-scrollbar max-h-[calc(100vh-3rem)] overflow-y-auto animate-koara-modal">
               <div className="mb-5">
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#8C5E78]">
                   Historial de compras
@@ -542,21 +545,21 @@ export default function ClientsPage() {
                       (invoice) => (
                         <div
                           key={invoice.id}
-                          className="grid gap-3 px-5 py-4 text-sm text-slate-700 sm:grid-cols-[1.1fr_1fr_1fr_0.9fr]"
+                          className="grid gap-3 px-5 py-4 text-sm text-slate-700 sm:grid-cols-[minmax(0,1.5fr)_auto_auto]"
                         >
-                          <p>
+                          <p className="min-w-0 break-words">
                             <span className="font-black text-slate-900">
                               Factura:{" "}
                             </span>
-                            {invoice.invoice_number}
+                            <span className="break-all">{invoice.invoice_number}</span>
                           </p>
-                          <p>
+                          <p className="whitespace-nowrap">
                             <span className="font-black text-slate-900">
                               Fecha:{" "}
                             </span>
                             {formatDate(invoice.created_at)}
                           </p>
-                          <p>
+                          <p className="whitespace-nowrap">
                             <span className="font-black text-slate-900">
                               Total:{" "}
                             </span>
@@ -587,12 +590,12 @@ export default function ClientsPage() {
         )}
 
         {selectedMostPurchasedClient && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto p-4 py-6 no-scrollbar">
             <div
               className="absolute inset-0 bg-black/20 backdrop-blur-sm animate-koara-fade"
               onClick={() => setMostPurchasedClientId(null)}
             />
-            <div className="relative w-full max-w-xl rounded-[1.75rem] border-2 border-black bg-[#F6DEEB] p-6 shadow-2xl no-scrollbar max-h-[calc(100vh-2rem)] overflow-y-auto animate-koara-modal">
+            <div className="relative z-10 w-full max-w-xl rounded-[1.75rem] border-2 border-black bg-[#F6DEEB] p-6 shadow-2xl no-scrollbar max-h-[calc(100vh-3rem)] overflow-y-auto animate-koara-modal">
               <div className="mb-5">
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#8C5E78]">
                   Productos mas comprados
