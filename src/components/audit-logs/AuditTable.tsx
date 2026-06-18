@@ -119,9 +119,6 @@ export function AuditTable({ data, itemsPerPage = 10 }: AuditTableProps) {
                         {translateAction(log.action)}
                       </span>
                     </td>
-                    <td className="px-8 py-5 border-r border-slate-100">
-                      <span className="text-sm text-slate-500 font-medium">{log.entity_id}</span>
-                    </td>
                     <td className="px-8 py-5">
                       <span className="text-sm text-slate-400 font-bold">{formatDate(log.created_at)}</span>
                     </td>
