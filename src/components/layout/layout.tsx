@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Menu, X, Home, Package, Users, FileText, UserCog, BarChart, Bot, ClipboardList } from "lucide-react";
 import koaraLogo from "@/imports/logo_insta_2.jpg"; 
 import titleIcon from "@/imports/image-removebg-preview_1-2.png";
-import { getAuth } from "@/lib/auth"; 
+import { getAuth } from "@/lib/api/auth.api";
 
 interface LayoutProps {
   children: ReactNode;
