@@ -8,6 +8,7 @@ interface CaiRangeModalProps {
   isOpen: boolean;
   mode: "add" | "edit";
   formData: {
+    cai_code?: string;
     cai_id: string;
     range_start: number;
     range_end: number;
@@ -36,6 +37,20 @@ export function CaiRangeModal({
       document.body.style.overflow = "";
     };
   }, [isOpen]);
+
+  // Función para formatear el CAI automáticamente: XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX-XX
+  const handleCaiCodeChange = (value: string) => {
+    let rawValue = value.replace(/-/g, "");
+    if (rawValue.length > 32) rawValue = rawValue.slice(0, 32);
+    
+    let formatted = "";
+    for (let i = 0; i < rawValue.length; i++) {
+      if (i > 0 && i % 6 === 0 && i < 30) formatted += "-";
+      else if (i === 30) formatted += "-";
+      formatted += rawValue[i];
+    }
+    setFormData({ ...formData, cai_code: formatted.toUpperCase() });
+  };
 
   if (!isOpen) return null;
 
@@ -72,24 +87,20 @@ export function CaiRangeModal({
             {/* Formulario */}
             <form onSubmit={onSubmit} className="space-y-5">
               
-              {/* Vinculación de Código CAI */}
+              {/* Código CAI */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-black uppercase tracking-wider block">Código CAI Autorizado *</label>
-                <select 
-                  value={formData.cai_id} 
-                  onChange={(e) => setFormData({ ...formData, cai_id: e.target.value })} 
+                <label className="text-xs font-bold text-black uppercase tracking-wider block">Código CAI *</label>
+                <input 
+                  type="text" 
+                  value={formData.cai_code || ""} 
+                  onChange={(e) => handleCaiCodeChange(e.target.value)} 
                   className="koara-input-field font-mono text-xs w-full"
+                  placeholder="Ej: A1B2C3-D4E5F6-G7H8I9-J0K1L2-M3N4O5-P6"
+                  pattern="^[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{2}$"
                   required
-                  onInvalid={(e) => (e.target as HTMLSelectElement).setCustomValidity("Por favor, selecciona un código CAI autorizado de la lista.")}
-                  onInput={(e) => (e.target as HTMLSelectElement).setCustomValidity("")}
-                >
-                  <option value="">Selecciona un código CAI</option>
-                  {codes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.cai_code} {c.is_active ? "(Activo)" : "(Inactivo)"}
-                    </option>
-                  ))}
-                </select>
+                  onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Formato requerido: XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX-XX (6-6-6-6-6-2 caracteres alfanuméricos)")}
+                  onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
+                />
               </div>
 
               {/* Campos Numéricos del Rango Autorizado */}
