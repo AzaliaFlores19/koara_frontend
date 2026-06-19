@@ -1,63 +1,98 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Search, Plus, Pencil, Trash2, Shield, Loader2 } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
-import { usersApi } from "@/lib/api/users";
+import { usersApi } from "@/services/users.service";
 import { User } from "@/lib/api/auth";
 import { UserModal } from "@/components/users/UserModal";
 import { Table } from "@/components/Table";
+import { isAdmin as checkIsAdmin } from "@/lib/auth";
+import { AlertModal } from "@/components/AlertModal";
 
 export default function UsersPage() {
+  const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [alertConfig, setAlertConfig] = useState<{
+    isOpen: boolean;
+    title?: string;
+    message: string;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    email: string;
+    role: User["role"];
+    password?: string;
+    phone?: string;
+  }>({
     name: "",
     email: "",
-    role: "Employee" as User["role"]
+    role: "EMPLOYEE",
+    password: "",
+    phone: "",
   });
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const admin = checkIsAdmin();
+    if (!admin) {
+      router.replace("/dashboard");
+    } else {
+      setIsAuthorized(true);
+      fetchUsers();
+    }
+  }, [router]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       const data = await usersApi.getAll();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching users:", err);
-      setError("Failed to load users. Please try again later.");
+      setError("Error al cargar los usuarios. Por favor, inténtelo de nuevo más tarde.");
+      setUsers([]);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   const handleOpenAddModal = () => {
     setModalMode("add");
-    setFormData({ name: "", email: "", role: "Employee"});
+    setFormData({ name: "", email: "", role: "EMPLOYEE", password: "", phone: "" });
     setSelectedUserId(null);
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (user: User) => {
     setModalMode("edit");
-    setFormData({ name: user.name, email: user.email, role: user.role });
+    setFormData({ 
+      name: user.name, 
+      email: user.email, 
+      role: user.role, 
+      phone: user.phone || ""
+    });
     setSelectedUserId(user.id);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setFormData({ name: "", email: "", role: "Employee" });
+    setFormData({ name: "", email: "", role: "EMPLOYEE", password: "", phone: "" });
     setSelectedUserId(null);
   };
 
@@ -65,54 +100,73 @@ export default function UsersPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        phone: formData.phone?.trim() || undefined,
+      };
 
       if (modalMode === "add") {
-        const newUser: User = {
-          id: (Math.max(...users.map((u) => parseInt(u.id)), 0) + 1).toString(),
-          name: formData.name,
-          email: formData.email,
-          role: formData.role,
-        };
+        // Validation for password strength if adding a new user
+        const password = formData.password || "";
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+        if (!passwordRegex.test(password)) {
+          setAlertConfig({
+            isOpen: true,
+            title: "Contraseña Inválida",
+            message: "La contraseña debe tener al menos 8 caracteres e incluir al menos una letra mayúscula, una letra minúscula y un número.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
 
-        setUsers((prev) => [...prev, newUser]);
+        await usersApi.create({
+          ...payload,
+          password,
+        });
       } else if (selectedUserId) {
-        setUsers((prev) =>
-          prev.map((u) =>
-            u.id === selectedUserId
-              ? {
-                  ...u,
-                  name: formData.name,
-                  email: formData.email,
-                  role: formData.role,
-                }
-              : u,
-          ),
-        );
+        await usersApi.update(selectedUserId, payload);
       }
 
+      await fetchUsers();
       handleCloseModal();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error saving user:", err);
-      alert("Failed to save user changes.");
+      const errorMessage = err.response?.data?.message || "Error al guardar los cambios del usuario.";
+      setAlertConfig({
+        isOpen: true,
+        title: "Error de Guardado",
+        message: errorMessage,
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDelete = (id: string) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await usersApi.deactivate(id);
+      await fetchUsers();
+    } catch (err) {
+      console.error("Error deactivating user:", err);
+      setAlertConfig({
+        isOpen: true,
+        title: "Error de Eliminación",
+        message: "Error al desactivar el usuario.",
+      });
+    }
   };
 
-  const filteredUsers = users.filter(
+  const filteredUsers = Array.isArray(users) ? users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) 
-  );
+  ) : [];
 
   const columns = [
     {
-      header: "Name",
+      header: "Nombre",
       render: (user: User) => (
         <div className="flex items-center gap-3">
           <div className="w-5 h-5 flex items-center justify-center text-gray-400">
@@ -123,31 +177,31 @@ export default function UsersPage() {
       ),
     },
     {
-      header: "Email",
+      header: "Correo electrónico",
       render: (user: User) => (
         <span className="text-sm text-gray-500">{user.email}</span>
       ),
     },
     {
-      header: "Role",
+      header: "Rol",
       render: (user: User) => (
         <span
           className={
-            user.role === "Admin" ? "k-badge-admin" : "k-badge-employee"
+            user.role === "ADMIN" ? "k-badge-admin" : "k-badge-employee"
           }
         >
-          {user.role}
+          {user.role === "ADMIN" ? "Administrador" : "Empleado"}
         </span>
       ),
     },
     {
-      header: "Actions",
+      header: "Acciones",
       render: (user: User, { openConfirm }: any) => (
         <div className="flex items-center justify-end gap-2">
           <button
             onClick={() => handleOpenEditModal(user)}
             className="koara-icon-btn"
-            aria-label="Edit user"
+            aria-label="Editar usuario"
           >
             <Pencil size={14} />
           </button>
@@ -159,7 +213,7 @@ export default function UsersPage() {
               })
             }
             className="koara-icon-btn"
-            aria-label="Delete user"
+            aria-label="Eliminar usuario"
           >
             <Trash2 size={14} />
           </button>
@@ -168,7 +222,7 @@ export default function UsersPage() {
     },
   ];
 
-  if (loading && users.length === 0) {
+  if (isAuthorized === null || (loading && users.length === 0)) {
     return (
       <DashboardLayout>
         <div className="flex min-h-[70vh] items-center justify-center">
@@ -177,6 +231,8 @@ export default function UsersPage() {
       </DashboardLayout>
     );
   }
+
+  if (!isAuthorized) return null;
 
   return (
     <DashboardLayout>
@@ -189,7 +245,7 @@ export default function UsersPage() {
             />
             <input
               type="text"
-              placeholder="Search users..."
+              placeholder="Buscar usuarios..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="koara-input !pl-12"
@@ -197,7 +253,7 @@ export default function UsersPage() {
           </div>
           <button onClick={handleOpenAddModal} className="koara-btn-black">
             <Plus size={18} />
-            Add User
+            Agregar Usuario
           </button>
         </div>
         <Table data={filteredUsers} columns={columns} itemsPerPage={8} />
@@ -210,6 +266,13 @@ export default function UsersPage() {
           onClose={handleCloseModal}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
+        />
+
+        <AlertModal
+          isOpen={alertConfig.isOpen}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })}
         />
       </div>
     </DashboardLayout>
