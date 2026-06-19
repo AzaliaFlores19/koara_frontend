@@ -18,6 +18,7 @@ import { TopProducts } from "@/components/dashboard/BestSellingCarousel";
 import { BrandStrip } from "@/components/dashboard/brand-strip";
 import { StatCard } from "@/components/dashboard/StatCard";
 import DashboardLayout from "@/components/layout/layout";
+import { isAdmin } from "@/lib/api/auth.api";
 
 import { dashboardService, DashboardMetrics } from "@/services/dashboard.service";
 import koaraLogo from "@/imports/logo_insta_2.jpg";
@@ -35,8 +36,10 @@ export default function Dashboard() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
 
   useEffect(() => {
+    setUserIsAdmin(isAdmin());
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
@@ -111,7 +114,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* ── BANDA 2: KEY STATS CARDS (100% Dynamic from Mock API) ── */}
+        {/* ── BANDA 2: KEY STATS CARDS ── */}
         <section className="w-full bg-[#f9e7f0]">
           <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
@@ -147,18 +150,26 @@ export default function Dashboard() {
                 </div>
               </StatCard>
 
-              <StatCard title="Ventas de hoy" value={metrics.todaySales.current} variant="pink" icon={<TrendingUp className="h-5 w-5" />}>
-                <div className="mt-2 space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Ayer</span>
-                    <span className="font-semibold text-foreground">{metrics.todaySales.yesterday}</span>
+              {userIsAdmin ? (
+                <StatCard title="Ventas de hoy" value={metrics.todaySales.current} variant="pink" icon={<TrendingUp className="h-5 w-5" />}>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Ayer</span>
+                      <span className="font-semibold text-foreground">{metrics.todaySales.yesterday}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Este mes</span>
+                      <span className="font-semibold text-foreground">{metrics.todaySales.thisMonth}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Este mes</span>
-                    <span className="font-semibold text-foreground">{metrics.todaySales.thisMonth}</span>
+                </StatCard>
+              ) : (
+                <StatCard title="Panel Operativo" value="🌸" variant="pink" icon={<TrendingUp className="h-5 w-5" />}>
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    Herramientas de gestión y métricas operativas para mejorar la eficiencia y el control del negocio.
                   </div>
-                </div>
-              </StatCard>
+                </StatCard>
+              )}
 
               <StatCard title="Facturas emitidas" value={metrics.invoices.emitted} variant="sky" icon={<FileText className="h-5 w-5" />}>
                 <div className="mt-2 space-y-1">
@@ -166,7 +177,6 @@ export default function Dashboard() {
                     <span className="text-muted-foreground">Pagadas</span>
                     <span className="font-semibold text-green-600">{metrics.invoices.emitted}</span>
                   </div>
-                  
                 </div>
               </StatCard>
 
@@ -174,7 +184,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* ── BANDA 4: TOP PRODUCTS (Dynamic carousel showing all multi-item mocked products) ── */}
+        {/* ── BANDA 4: TOP PRODUCTS ── */}
         <section className="w-full bg-[#f9e7f0]">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
             <TopProducts products={formattedTopProducts} />
@@ -215,57 +225,46 @@ export default function Dashboard() {
           </div>
         </section>
 
-      {/* ── FOOTER ── */}
-<footer className="mt-auto w-full bg-[#d99ebd]">
-  <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-    <div className="grid grid-cols-1 gap-6 text-center sm:grid-cols-3 sm:text-left">
-      
-      {/* Contacto: Ahora es solo texto plano, no un enlace */}
-      <div>
-        <h3 className="mb-3 font-semibold text-foreground">Contacto</h3>
-        <div className="flex items-center justify-center gap-2 text-sm text-foreground sm:justify-start">
-          <Mail size={16} /> <span>info@koara.com</span>
-        </div>
-      </div>
-
-      {/* Instagram: Enlace actualizado con tu link de perfil */}
-      <div>
-        <h3 className="mb-3 font-semibold text-foreground">Síguenos</h3>
-        <a 
-          href="https://www.instagram.com/koara.kr?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="flex items-center justify-center gap-2 text-sm text-foreground hover:opacity-70 sm:justify-start"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-            <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-          </svg>{" "}
-          @koara.kr
-        </a>
-      </div>
-
-      {/* Catálogo: Enlace directo al visor Heyzine optimizado */}
-      <div>
-        <h3 className="mb-3 font-semibold text-foreground">Catálogo</h3>
-        <a 
-          href="https://heyzine.com/flip-book/2536f2e2a8.html" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="flex items-center justify-center gap-2 text-sm text-foreground hover:opacity-70 sm:justify-start"
-        >
-          <BookOpen size={16} /> Ver nuestro catálogo
-        </a>
-      </div>
-
-    </div>
-    
-    <div className="mt-6 border-t border-black/15 pt-6 text-center text-xs text-foreground/60">
-      © 2026 Koara. Todos los derechos reservados.
-    </div>
-  </div>
-</footer>
+        {/* ── FOOTER ── */}
+        <footer className="mt-auto w-full bg-[#d99ebd]">
+          <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-6 text-center sm:grid-cols-3 sm:text-left">
+              <div>
+                <h3 className="mb-3 font-semibold text-foreground">Contacto</h3>
+                <div className="flex items-center justify-center gap-2 text-sm text-foreground sm:justify-start">
+                  <Mail size={16} /> <span>info@koara.com</span>
+                </div>
+              </div>
+              <div>
+                <h3 className="mb-3 font-semibold text-foreground">Síguenos</h3>
+                <a 
+                  href="https://www.instagram.com/koara.kr" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="flex items-center justify-center gap-2 text-sm text-foreground hover:opacity-70 sm:justify-start"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                  </svg> @koara.kr
+                </a>
+              </div>
+              <div>
+                <h3 className="mb-3 font-semibold text-foreground">Catálogo</h3>
+                <a 
+                  href="https://heyzine.com/flip-book/2536f2e2a8.html" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="flex items-center justify-center gap-2 text-sm text-foreground hover:opacity-70 sm:justify-start"
+                >
+                  <BookOpen size={16} /> Ver nuestro catálogo
+                </a>
+              </div>
+            </div>
+            <div className="mt-6 border-t border-black/15 pt-6 text-center text-xs text-foreground/60">
+              © 2026 Koara. Todos los derechos reservados.
+            </div>
+          </div>
+        </footer>
 
       </div>
     </DashboardLayout>
