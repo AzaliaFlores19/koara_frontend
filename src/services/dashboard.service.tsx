@@ -1,5 +1,4 @@
 import { apiClient } from "@/lib/api/axios";
-import { dashboardApi } from "@/lib/api/dashboard"; 
 
 export interface LowStockProduct {
   name: string;
