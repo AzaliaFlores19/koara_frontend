@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AuditLog } from "@/lib/types/models";
+import Pagination from "../inventory/Pagination";
 
 interface AuditTableProps {
   data: AuditLog[];
@@ -97,8 +97,8 @@ export function AuditTable({ data, itemsPerPage = 10 }: AuditTableProps) {
               <tr className="bg-[#f4b8d4]">
                 <th className="px-8 py-5 text-sm font-bold text-black border-r border-black/10">Usuario</th>
                 <th className="px-8 py-5 text-sm font-bold text-black border-r border-black/10">Entidad</th>
+                <th className="px-8 py-5 text-sm font-bold text-black border-r border-black/10">Objeto</th>
                 <th className="px-8 py-5 text-sm font-bold text-black border-r border-black/10">Acción</th>
-                <th className="px-8 py-5 text-sm font-bold text-black border-r border-black/10">Referencia</th>
                 <th className="px-8 py-5 text-sm font-bold text-black">Fecha</th>
               </tr>
             </thead>
@@ -112,6 +112,14 @@ export function AuditTable({ data, itemsPerPage = 10 }: AuditTableProps) {
                     <td className="px-8 py-5 border-r border-slate-100 text-center">
                       <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest border-2 ${getEntityStyles(log.entity)}`}>
                         {translateEntity(log.entity)}
+                      </span>
+                    </td>
+                    <td className="px-8 py-5 border-r border-slate-100">
+                      <span
+                        className="text-sm font-semibold text-slate-700"
+                        title={log.detail ?? undefined}
+                      >
+                        {log.detail || <span className="text-slate-300">—</span>}
                       </span>
                     </td>
                     <td className="px-8 py-5 border-r border-slate-100 text-center">
@@ -137,21 +145,11 @@ export function AuditTable({ data, itemsPerPage = 10 }: AuditTableProps) {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4">
-          <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="koara-pagination-btn !w-12 !h-12 hover:-translate-y-1 transition-transform">
-            <ChevronLeft size={22} />
-          </button>
-          <div className="flex items-center gap-2 bg-white/40 p-1.5 rounded-full border-2 border-slate-900">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button key={page} onClick={() => goToPage(page)} className={`w-10 h-10 rounded-full font-black text-sm transition-all ${currentPage === page ? "bg-[#f4b8d4] text-black border-2 border-slate-900 shadow-[2px_2px_0px_#000] -translate-y-0.5" : "hover:bg-white text-slate-500"}`}>
-                {page}
-              </button>
-            ))}
-          </div>
-          <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="koara-pagination-btn !w-12 !h-12 hover:-translate-y-1 transition-transform">
-            <ChevronRight size={22} />
-          </button>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+        />
       )}
     </div>
   );

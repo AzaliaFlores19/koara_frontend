@@ -34,6 +34,7 @@ export interface AuditLog {
   user_id: string;
   entity: AuditEntity;
   entity_id: string;
+  detail?: string | null;
   action: AuditAction;
   created_at: string;
   user?: {

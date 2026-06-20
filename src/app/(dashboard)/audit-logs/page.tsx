@@ -99,6 +99,7 @@ export default function AuditLogsPage() {
   const filteredLogs = logs.filter((log) => {
     const matchesSearch =
       log.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      log.detail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       log.entity_id.toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesSearch;
@@ -132,7 +133,7 @@ export default function AuditLogsPage() {
           />
           <input
             type="text"
-            placeholder="Buscar registros por usuario o ID..."
+            placeholder="Buscar registros por usuario u objeto..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="koara-input !pl-12 !py-3 !text-base shadow-sm w-full"
