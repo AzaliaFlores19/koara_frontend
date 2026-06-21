@@ -85,7 +85,7 @@ export function Table<T extends { id: string | number }>({
       }
 
       const prevItem = prevDataMapRef.current.get(item.id);
-      if (prevItem && prevItem !== item) {
+      if (prevItem && JSON.stringify(prevItem) !== JSON.stringify(item)) {
         hasEdit = true;
       }
     });
