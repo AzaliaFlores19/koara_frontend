@@ -6,6 +6,7 @@ export interface User {
   email: string;
   role: "ADMIN" | "EMPLOYEE";
   phone?: string;
+  is_active: boolean;
 }
 
 export const authApi = {
@@ -21,5 +22,5 @@ export const authApi = {
   resetPassword: (token: string, password: string) =>
     apiPost<void>("auth/reset-password", { token, password }),
 
-  getProfile: () => apiGet<User>("auth/profile"),
+  getProfile: () => apiGet<User>("users/me"),
 };

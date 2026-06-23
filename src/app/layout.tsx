@@ -15,11 +15,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      {/* Le agregamos la clase 'bg-koara-bg' directamente al body 
-        para que toda la aplicación use tu rosa pastel de fondo por defecto 
-      */}
-      <body className="no-scrollbar antialiased bg-koara-bg">
-        {children}
+      <body className="no-scrollbar antialiased bg-koara-bg" suppressHydrationWarning>
+        <AuthGuard>
+          {children}
+        </AuthGuard>
       </body>
     </html>
   );

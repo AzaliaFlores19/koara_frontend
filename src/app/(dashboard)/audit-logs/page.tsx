@@ -1,81 +1,117 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, Download, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { Search, Loader2 } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
 import { AuditTable } from "@/components/audit-logs/AuditTable";
-import { auditLogsApi, AuditLog } from "@/lib/api/audit-logs";
+import { auditApi } from "@/services/audit.service";
+import { usersApi } from "@/services/users.service";
+import { AuditLog, AuditEntity, AuditAction, User } from "@/lib/types/models";
 import { Dropdown } from "@/components/Dropdown";
 import { DateRangePicker } from "@/components/audit-logs/DateRangePicker";
+import { isAdmin } from "@/lib/auth";
 
 export default function AuditLogsPage() {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter states
-  const [filterUser, setFilterUser] = useState("All Users");
-  const [filterEntity, setFilterEntity] = useState("All Entities");
-  const [filterAction, setFilterAction] = useState("All Actions");
+  const [filterUser, setFilterUser] = useState("Todos los Usuarios");
+  const [filterEntity, setFilterEntity] = useState("Todas las Entidades");
+  const [filterAction, setFilterAction] = useState("Todas las Acciones");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
 
   useEffect(() => {
-    const fetchLogs = async () => {
+    const isUserAdmin = isAdmin();
+    if (!isUserAdmin) {
+      router.replace("/dashboard");
+      setAuthorized(false);
+    } else {
+      setAuthorized(true);
+    }
+  }, [router]);
+
+  const entityMapping: Record<string, AuditEntity> = {
+    "CATEGORÍA": "CATEGORY",
+    "USUARIOS": "USERS",
+    "PRODUCTOS": "PRODUCTS",
+    "FACTURAS": "INVOICES",
+    "PRODUCTOS DE FACTURA": "INVOICE_PRODUCTS",
+    "CLIENTES": "CLIENTS",
+    "CAI": "CAI",
+    "RANGO CAI": "CAI_RANGE",
+    "EMPRESA": "COMPANY",
+  };
+
+  const actionMapping: Record<string, AuditAction> = {
+    "CREAR": "CREATE",
+    "ACTUALIZAR": "UPDATE",
+    "DESACTIVAR": "DEACTIVATE",
+    "INICIO SESIÓN": "LOGIN",
+    "CIERRE SESIÓN": "LOGOUT",
+  };
+
+  const fetchLogs = useCallback(async () => {
+    if (!authorized) return;
+    try {
+      setLoading(true);
+      const selectedUser = users.find(u => u.name === filterUser);
+      const filters = {
+        userId: selectedUser?.id,
+        entity: entityMapping[filterEntity],
+        action: actionMapping[filterAction],
+        startDate: dateRange.start || undefined,
+        endDate: dateRange.end || undefined,
+      };
+      const data = await auditApi.getAuditLogs(filters);
+      setLogs(data);
+    } catch (err) {
+      console.error("Error fetching audit logs:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [filterUser, filterEntity, filterAction, dateRange, users, authorized]);
+
+  useEffect(() => {
+    if (!authorized) return;
+    const init = async () => {
       try {
-        setLoading(true);
-        const data = await auditLogsApi.getAll();
-        setLogs(data);
+        const usersData = await usersApi.getAll();
+        setUsers(usersData);
       } catch (err) {
-        console.error("Error fetching audit logs:", err);
-      } finally {
-        setLoading(false);
+        console.error("Error fetching users:", err);
       }
     };
-    fetchLogs();
-  }, []);
+    init();
+  }, [authorized]);
+
+  useEffect(() => {
+    if (authorized) {
+      fetchLogs();
+    }
+  }, [fetchLogs, authorized]);
 
   const filteredLogs = logs.filter((log) => {
     const matchesSearch =
-      log.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.reference.toLowerCase().includes(searchQuery.toLowerCase());
+      log.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      log.detail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      log.entity_id.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesUser = filterUser === "All Users" || log.user === filterUser;
-    const matchesEntity =
-      filterEntity === "All Entities" || log.entity === filterEntity;
-    const matchesAction =
-      filterAction === "All Actions" || log.action === filterAction;
-
-    const matchesDate = (() => {
-      if (!dateRange.start && !dateRange.end) return true;
-      
-      // Handle the mock data format "DD/MM" or standard formats
-      let logDate: Date;
-      if (log.date.includes("/") && log.date.split("/").length === 2) {
-        const [day, month] = log.date.split("/").map(Number);
-        logDate = new Date(2026, month - 1, day);
-      } else {
-        logDate = new Date(log.date);
-      }
-
-      if (isNaN(logDate.getTime())) return true;
-
-      if (dateRange.start) {
-        const start = new Date(dateRange.start);
-        start.setHours(0, 0, 0, 0);
-        if (logDate < start) return false;
-      }
-      if (dateRange.end) {
-        const end = new Date(dateRange.end);
-        end.setHours(23, 59, 59, 999);
-        if (logDate > end) return false;
-      }
-      return true;
-    })();
-
-    return matchesSearch && matchesUser && matchesEntity && matchesAction && matchesDate;
+    return matchesSearch;
   });
 
-  if (loading) {
+  const userOptions = ["Todos los Usuarios", ...users.map(u => u.name)];
+  const entityOptions = ["Todas las Entidades", ...Object.keys(entityMapping)];
+  const actionOptions = ["Todas las Acciones", ...Object.keys(actionMapping)];
+
+  if (authorized === false) return null;
+
+  if (authorized === null || (loading && logs.length === 0)) {
     return (
       <DashboardLayout>
         <div className="flex min-h-[70vh] items-center justify-center">
@@ -97,7 +133,7 @@ export default function AuditLogsPage() {
           />
           <input
             type="text"
-            placeholder="Search logs..."
+            placeholder="Buscar registros por usuario u objeto..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="koara-input !pl-12 !py-3 !text-base shadow-sm w-full"
@@ -111,32 +147,19 @@ export default function AuditLogsPage() {
             <Dropdown
               value={filterUser}
               onChange={setFilterUser}
-              options={["All Users", "Admin", "Ana", "Carlos", "Maria"]}
+              options={userOptions}
               className="min-w-[160px]"
             />
             <Dropdown
               value={filterEntity}
               onChange={setFilterEntity}
-              options={[
-                "All Entities",
-                "PRODUCTS",
-                "CLIENTS",
-                "CAI_RANGE",
-                "USERS",
-                "INVOICES",
-              ]}
+              options={entityOptions}
               className="min-w-[180px]"
             />
             <Dropdown
               value={filterAction}
               onChange={setFilterAction}
-              options={[
-                "All Actions",
-                "CREATE",
-                "UPDATE",
-                "DELETE",
-                "DEACTIVATE",
-              ]}
+              options={actionOptions}
               className="min-w-[160px]"
             />
             <DateRangePicker
@@ -153,3 +176,4 @@ export default function AuditLogsPage() {
     </DashboardLayout>
   );
 }
+

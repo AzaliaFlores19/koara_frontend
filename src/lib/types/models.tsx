@@ -18,6 +18,32 @@ export type AuditAction =
   | "LOGIN"
   | "LOGOUT";
 
+export type AuditEntity =
+  | "CATEGORY"
+  | "USERS"
+  | "PRODUCTS"
+  | "INVOICES"
+  | "INVOICE_PRODUCTS"
+  | "CLIENTS"
+  | "CAI"
+  | "CAI_RANGE"
+  | "COMPANY";
+
+export interface AuditLog {
+  id: string;
+  user_id: string;
+  entity: AuditEntity;
+  entity_id: string;
+  detail?: string | null;
+  action: AuditAction;
+  created_at: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
 // ====================
 // AUTH
 // ====================
@@ -41,7 +67,7 @@ export interface User {
   phone?: string;
   role: UserRole;
   is_active: boolean;
-  creation_date: string;
+  creation_date?: string;
 }
 
 // ====================
