@@ -15,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className="no-scrollbar antialiased bg-koara-bg">
+      <body className="no-scrollbar antialiased bg-koara-bg" suppressHydrationWarning>
         <AuthGuard>
           {children}
         </AuthGuard>
