@@ -54,6 +54,7 @@ const EMPTY_FORM: ClientForm = {
 
 const CLIENTS_PER_PAGE = 6;
 const RTN_REGEX = /^\d{14}$/;
+const DEFAULT_RTN = "99999999999999";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -198,7 +199,7 @@ export default function ClientsPage() {
       name: formData.name.trim(),
       email: formData.email.trim() || undefined,
       phone: formData.phone.trim() || undefined,
-      rtn: formData.rtn?.trim() || undefined,
+      rtn: formData.rtn?.trim() || DEFAULT_RTN,
     };
 
     if (!nextClient.name) {
@@ -207,7 +208,7 @@ export default function ClientsPage() {
     }
 
     if (nextClient.rtn && !RTN_REGEX.test(nextClient.rtn)) {
-      setFormError("El RTN debe tener exactamente 14 digitos numericos.");
+      setFormError("El RTN debe tener exactamente 14 dígitos numéricos.");
       return;
     }
 
@@ -402,13 +403,13 @@ export default function ClientsPage() {
               style={{ maxHeight: "calc(100vh - 3rem)", overflowY: "auto" }}
             >
               <h2 className="mb-6 text-2xl font-bold text-black">
-                {clientModalMode === "add" ? "Add Client" : "Edit Client"}
+                {clientModalMode === "add" ? "Agregar cliente" : "Editar cliente"}
               </h2>
 
               <form onSubmit={handleSaveClient} className="space-y-5">
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-black">
-                    Name
+                    Nombre
                   </label>
                   <input
                     type="text"
@@ -427,20 +428,20 @@ export default function ClientsPage() {
                       }))
                     }
                     className="koara-input-field"
-                    placeholder="Enter full name"
+                    placeholder="Ingresa el nombre completo"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-black">
-                    Email
+                    Correo electrónico
                   </label>
                   <input
                     type="email"
                     value={formData.email}
                     onInvalid={(event) =>
                       event.currentTarget.setCustomValidity(
-                        "Por favor, ingresa un correo valido.",
+                        "Por favor, ingresa un correo válido.",
                       )
                     }
                     onInput={clearValidationMessage}
@@ -451,13 +452,13 @@ export default function ClientsPage() {
                       }))
                     }
                     className="koara-input-field"
-                    placeholder="name@example.com"
+                    placeholder="correo@ejemplo.com"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-black">
-                    Phone
+                    Teléfono
                   </label>
                   <input
                     type="tel"
@@ -488,7 +489,7 @@ export default function ClientsPage() {
                     className="koara-input-field"
                     inputMode="numeric"
                     maxLength={14}
-                    placeholder="00000000000000"
+                    placeholder={DEFAULT_RTN}
                   />
                   <p className="text-right text-xs font-bold text-black/50">
                     {formData.rtn?.length || 0} / 14
@@ -507,13 +508,13 @@ export default function ClientsPage() {
                     onClick={closeAddModal}
                     className="koara-btn-cancel"
                   >
-                    Cancel
+                    Cancelar
                   </button>
                   <button
                     type="submit"
                     className="koara-btn-pink"
                   >
-                    Save
+                    Guardar
                   </button>
                 </div>
               </form>
@@ -525,7 +526,7 @@ export default function ClientsPage() {
           isOpen={!!clientToDelete}
           message={
             clientToDelete
-              ? `Seguro que quieres eliminar a ${clientToDelete.name}? Esta accion no se puede deshacer.`
+              ? `¿Seguro que quieres eliminar a ${clientToDelete.name}? Esta acción no se puede deshacer.`
               : ""
           }
           onConfirm={() => {
@@ -587,7 +588,7 @@ export default function ClientsPage() {
                   </div>
                 ) : (
                   <p className="px-5 py-10 text-center text-sm font-bold text-slate-500">
-                    Este cliente aun no tiene facturas registradas.
+                    Este cliente aún no tiene facturas registradas.
                   </p>
                 )}
               </div>
@@ -614,7 +615,7 @@ export default function ClientsPage() {
             <div className="relative z-10 w-full max-w-xl rounded-[1.75rem] border-2 border-black bg-[#F6DEEB] p-6 shadow-2xl no-scrollbar max-h-[calc(100vh-3rem)] overflow-y-auto animate-koara-modal">
               <div className="mb-5">
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#8C5E78]">
-                  Productos mas comprados
+                  Productos más comprados
                 </p>
                 <h2 className="mt-1 text-2xl font-black text-black">
                   {selectedMostPurchasedClient.name}
@@ -647,7 +648,7 @@ export default function ClientsPage() {
                   )
                 ) : (
                   <p className="rounded-3xl border-2 border-black bg-white px-5 py-10 text-center text-sm font-bold text-slate-500">
-                    Este cliente aun no tiene productos comprados.
+                    Este cliente aún no tiene productos comprados.
                   </p>
                 )}
               </div>

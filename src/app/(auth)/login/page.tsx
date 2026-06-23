@@ -171,7 +171,7 @@ export default function Login() {
               </p>
             </div>
 
-            {/* Error Notification Block */}
+            {/* Bloque de notificación de error */}
             {error && (
               <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-medium flex items-center gap-2 animate-fadeIn transition-all">
                 <AlertCircle size={16} className="shrink-0" />
