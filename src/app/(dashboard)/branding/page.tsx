@@ -104,8 +104,8 @@ export default function BrandingPage() {
 
     input.setCustomValidity(
       input.validity.valueMissing
-        ? "Por favor, ingresa el correo electronico de la empresa."
-        : "Por favor, ingresa un correo valido.",
+        ? "Por favor, ingresa el correo electrónico de la empresa."
+        : "Por favor, ingresa un correo válido.",
     );
   };
 
@@ -352,7 +352,7 @@ export default function BrandingPage() {
                             onChange={(event) => updateField("phone", event.target.value)}
                             onInvalid={(event) =>
                               event.currentTarget.setCustomValidity(
-                                "Por favor, ingresa el telefono de la empresa.",
+                                "Por favor, ingresa el teléfono de la empresa.",
                               )
                             }
                             onInput={clearValidationMessage}
@@ -400,7 +400,7 @@ export default function BrandingPage() {
                           onChange={(event) => updateField("address", event.target.value)}
                           onInvalid={(event) =>
                             event.currentTarget.setCustomValidity(
-                              "Por favor, ingresa la direccion de la empresa.",
+                              "Por favor, ingresa la dirección de la empresa.",
                             )
                           }
                           onInput={clearValidationMessage}
