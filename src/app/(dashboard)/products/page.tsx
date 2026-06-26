@@ -17,6 +17,7 @@ import {
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { productsApi } from "@/services/products.service";
 import { categoriesApi, type Category } from "@/services/categories.service";
+import { useCart } from "@/lib/cart-context";
 
 const EMPTY_FORM: ProductFormData = {
   name: "",
@@ -64,6 +65,9 @@ export default function ProductsPage() {
     message: string;
     onConfirm: () => void;
   } | null>(null);
+
+  const [addingToCartId, setAddingToCartId] = useState<string | null>(null);
+  const { addItem: addItemToCart } = useCart();
 
   const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
 
@@ -258,6 +262,20 @@ export default function ProductsPage() {
     });
   };
 
+  const handleAddToCart = async (product: Product) => {
+    setAddingToCartId(product.id);
+    try {
+      await addItemToCart(product.id, 1);
+      showToast(`"${product.name}" agregado al carrito.`);
+    } catch (err: any) {
+      showToast(
+        err?.response?.data?.message ?? "No se pudo agregar al carrito.",
+      );
+    } finally {
+      setAddingToCartId(null);
+    }
+  };
+
   const categoryNames = apiCategories.map((c) => c.name);
 
   return (
@@ -359,6 +377,8 @@ export default function ProductsPage() {
                   product={product}
                   onEdit={handleOpenEditModal}
                   onDelete={handleDelete}
+                  onAddToCart={handleAddToCart}
+                  isAddingToCart={addingToCartId === product.id}
                 />
               ))}
             </div>

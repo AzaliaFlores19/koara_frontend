@@ -4,31 +4,11 @@ import { useState, useMemo, useEffect } from "react";
 import { Plus, X, Loader2, Download, ArrowLeft, ChevronDown } from "lucide-react";
 import { Invoice, InvoiceItem } from "@/lib/types/models";
 
-interface ProductMock {
+interface ProductOption {
   id: string;
   name: string;
   price: number;
 }
-
-const MOCK_PRODUCTS: ProductMock[] = [
-  { id: "p1", name: "Skin Mask", price: 97.8 },
-  { id: "p2", name: "Centella Ampoule", price: 540 },
-  { id: "p3", name: "Glow Serum", price: 420 },
-  { id: "p4", name: "Sun Shield", price: 320 },
-];
-
-const MOCK_CLIENTS = [
-  { id: "c1", name: "Juan Pérez" },
-  { id: "c2", name: "María Rodríguez" },
-  { id: "c3", name: "Carlos López" },
-  { id: "c4", name: "Ana Martínez" },
-];
-
-const MOCK_VENDORS = [
-  { id: "v1", name: "Admin User" },
-  { id: "v2", name: "Store Manager" },
-  { id: "v3", name: "Sales Rep" },
-];
 
 interface InvoiceModalProps {
   isOpen: boolean;
@@ -39,6 +19,7 @@ interface InvoiceModalProps {
   onNext?: (data: Partial<Invoice>) => void;
   onBack?: () => void;
   isSubmitting?: boolean;
+  productOptions?: ProductOption[];
 }
 
 export function InvoiceModal({
@@ -50,6 +31,7 @@ export function InvoiceModal({
   onNext,
   onBack,
   isSubmitting = false,
+  productOptions = [],
 }: InvoiceModalProps) {
   const [clientName, setClientName] = useState(invoice?.client_name || "");
   const [vendorName, setVendorName] = useState(invoice?.vendor_name || "");
@@ -57,8 +39,8 @@ export function InvoiceModal({
 
   useEffect(() => {
     if (isOpen) {
-      setClientName(invoice?.client_name || MOCK_CLIENTS[0].name);
-      setVendorName(invoice?.vendor_name || MOCK_VENDORS[0].name);
+      setClientName(invoice?.client_name || "");
+      setVendorName(invoice?.vendor_name || "");
       setItems(invoice?.invoice_items || []);
     }
   }, [isOpen, invoice]);
@@ -71,13 +53,19 @@ export function InvoiceModal({
   }, [isOpen]);
   
   // Create mode state
-  const [selectedProductId, setSelectedProductId] = useState(MOCK_PRODUCTS[0].id);
+  const [selectedProductId, setSelectedProductId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [localMode, setLocalMode] = useState<"create" | "view" | "preview">(mode);
 
   useEffect(() => {
     setLocalMode(mode);
   }, [mode]);
+
+  useEffect(() => {
+    if (productOptions.length && !selectedProductId) {
+      setSelectedProductId(productOptions[0].id);
+    }
+  }, [productOptions, selectedProductId]);
 
   const handleBack = () => {
     if (onBack) {
@@ -95,7 +83,7 @@ export function InvoiceModal({
   const total = subtotal + isv;
 
   const handleAddItem = () => {
-    const product = MOCK_PRODUCTS.find((p) => p.id === selectedProductId);
+    const product = productOptions.find((p) => p.id === selectedProductId);
     if (!product) return;
 
     const existingItemIndex = items.findIndex((item) => item.product_id === product.id);
@@ -289,40 +277,10 @@ export function InvoiceModal({
 
     return (
       <>
-        <h2 className="text-2xl font-bold mb-6 text-black">Crear Factura</h2>
-        
-        <div className="space-y-4 mb-6">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-700">Nombre de Cliente</label>
-            <div className="relative">
-              <select
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                className="koara-input-field appearance-none pr-10"
-              >
-                {MOCK_CLIENTS.map((c) => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-700">Vendedor</label>
-            <div className="relative">
-              <select
-                value={vendorName}
-                onChange={(e) => setVendorName(e.target.value)}
-                className="koara-input-field appearance-none pr-10"
-              >
-                {MOCK_VENDORS.map((v) => (
-                  <option key={v.id} value={v.name}>{v.name}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            </div>
-          </div>
-        </div>
+        <h2 className="text-2xl font-bold mb-2 text-black">Crear Factura</h2>
+        <p className="text-xs font-bold text-slate-400 mb-6">
+          Selecciona los productos y al continuar se agregarán a tu carrito para finalizar la compra.
+        </p>
 
         <div className="bg-white rounded-2xl border-2 border-slate-900 p-4 mb-6">
           <div className="flex gap-3 mb-2">
@@ -332,7 +290,10 @@ export function InvoiceModal({
                 onChange={(e) => setSelectedProductId(e.target.value)}
                 className="w-full bg-white border-2 border-slate-900 rounded-xl px-4 py-2 font-bold text-sm outline-none appearance-none pr-10"
               >
-                {MOCK_PRODUCTS.map((p) => (
+                {productOptions.length === 0 && (
+                  <option value="">Cargando productos...</option>
+                )}
+                {productOptions.map((p) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
@@ -392,8 +353,8 @@ export function InvoiceModal({
             Cancelar
           </button>
           <button
-            onClick={() => onNext?.({ client_name: clientName, vendor_name: vendorName, subtotal, taxes: isv, total, invoice_items: items as InvoiceItem[], created_at: new Date().toISOString() })}
-            disabled={isSubmitting || items.length === 0 || !clientName}
+            onClick={() => onNext?.({ invoice_items: items as InvoiceItem[] })}
+            disabled={isSubmitting || items.length === 0}
             className="koara-btn-pink py-4"
           >
             {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : "Siguiente"}

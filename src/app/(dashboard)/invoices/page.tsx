@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Search, Plus, ChevronDown, Loader2, Eye, Download } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
 import { Table } from "@/components/Table";
@@ -8,6 +9,8 @@ import { Invoice } from "@/lib/types/models";
 import { invoicesApi } from "@/lib/api/invoices";
 import { InvoiceModal } from "@/components/invoices/InvoiceModal";
 import { DateRangePicker } from "@/components/audit-logs/DateRangePicker";
+import { productsApi } from "@/services/products.service";
+import { useCart } from "@/lib/cart-context";
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -25,6 +28,12 @@ export default function InvoicesPage() {
   const [modalMode, setModalMode] = useState<"create" | "view" | "preview">("create");
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [productOptions, setProductOptions] = useState<
+    { id: string; name: string; price: number }[]
+  >([]);
+
+  const router = useRouter();
+  const { addItem } = useCart();
 
   const fetchInvoices = async () => {
     try {
@@ -41,6 +50,17 @@ export default function InvoicesPage() {
 
   useEffect(() => {
     fetchInvoices();
+  }, []);
+
+  useEffect(() => {
+    productsApi
+      .getAll(1, 100)
+      .then((res) =>
+        setProductOptions(
+          res.data.map((p) => ({ id: p.id, name: p.name, price: p.price })),
+        ),
+      )
+      .catch(() => setProductOptions([]));
   }, []);
 
   const handleOpenCreateModal = () => {
@@ -60,9 +80,23 @@ export default function InvoicesPage() {
     setSelectedInvoice(null);
   };
 
-  const handleNextToPreview = (data: Partial<Invoice>) => {
-    setSelectedInvoice(data as Invoice);
-    setModalMode("preview");
+  const handleSendToCart = async (data: Partial<Invoice>) => {
+    const lines = data.invoice_items ?? [];
+    if (lines.length === 0) return;
+    setIsSubmitting(true);
+    try {
+      for (const line of lines) {
+        if (line.product_id && line.quantity) {
+          await addItem(line.product_id, line.quantity);
+        }
+      }
+      setIsModalOpen(false);
+      router.push("/cart");
+    } catch {
+      alert("No se pudieron agregar los productos al carrito.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleBackToCreate = () => {
@@ -244,9 +278,10 @@ export default function InvoicesPage() {
           isOpen={isModalOpen}
           mode={modalMode}
           invoice={selectedInvoice}
+          productOptions={productOptions}
           onClose={handleCloseModal}
           onConfirm={handleConfirmInvoice}
-          onNext={handleNextToPreview}
+          onNext={handleSendToCart}
           onBack={handleBackToCreate}
           isSubmitting={isSubmitting}
         />

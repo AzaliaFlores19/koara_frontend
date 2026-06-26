@@ -1,6 +1,6 @@
 "use client";
 
-import { Package } from "lucide-react";
+import { Package, ShoppingCart, Loader2 } from "lucide-react";
 
 export interface Product {
   id: string;
@@ -19,9 +19,11 @@ interface ProductCardProps {
   product: Product;
   onEdit: (product: Product) => void;
   onDelete: (product: Product) => void;
+  onAddToCart?: (product: Product) => void;
+  isAddingToCart?: boolean;
 }
 
-export default function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
+export default function ProductCard({ product, onEdit, onDelete, onAddToCart, isAddingToCart }: ProductCardProps) {
   return (
     <div className="bg-white rounded-2xl overflow-hidden border border-black flex flex-col">
       <div
@@ -56,6 +58,23 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
             Eliminar
           </button>
         </div>
+
+        {onAddToCart && (
+          <button
+            onClick={() => onAddToCart(product)}
+            disabled={isAddingToCart || product.stock < 1}
+            className="mt-1.5 w-full py-1 text-[10px] font-semibold bg-koara-primary text-black rounded-full border border-black hover:bg-koara-primary/80 transition-colors disabled:opacity-40 flex items-center justify-center gap-1"
+          >
+            {isAddingToCart ? (
+              <Loader2 size={11} className="animate-spin" />
+            ) : (
+              <>
+                <ShoppingCart size={11} />
+                {product.stock < 1 ? "Sin stock" : "Agregar al carrito"}
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
