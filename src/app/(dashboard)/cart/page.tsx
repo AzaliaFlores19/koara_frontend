@@ -12,14 +12,12 @@ import {
   AlertTriangle,
   Loader2,
 } from "lucide-react";
+import Link from "next/link";
 import DashboardLayout from "@/components/layout/layout";
 import { ConfirmModal } from "@/components/ConfirmModal";
-import { CheckoutModal, type CheckoutClient } from "@/components/cart/CheckoutModal";
 import { useCart } from "@/lib/cart-context";
 import { productsApi } from "@/services/products.service";
-import { clientsApi } from "@/services/clients.service";
 import type { Product } from "@/components/inventory/ProductCard";
-import type { PaymentMethod } from "@/lib/types/models";
 
 export default function CartPage() {
   const {
@@ -29,18 +27,13 @@ export default function CartPage() {
     updateItem,
     removeItem,
     clear,
-    checkout,
   } = useCart();
 
   const [search, setSearch] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const [clients, setClients] = useState<CheckoutClient[]>([]);
-
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [showCheckout, setShowCheckout] = useState(false);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
 
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
@@ -60,20 +53,6 @@ export default function CartPage() {
       setIsSearching(false);
     }
   }, [search]);
-
-  const fetchClients = useCallback(async () => {
-    try {
-      const res = await clientsApi.getAll(1, 100);
-      const list = (res?.data ?? res ?? []) as { id: string; name: string }[];
-      setClients(list.map((c) => ({ id: c.id, name: c.name })));
-    } catch {
-      // silent — checkout modal will show no clients
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchClients();
-  }, [fetchClients]);
 
   useEffect(() => {
     const t = setTimeout(fetchProducts, 300);
@@ -128,25 +107,6 @@ export default function CartPage() {
       showToast("Carrito vaciado.");
     } catch {
       showToast("No se pudo vaciar el carrito.", false);
-    }
-  };
-
-  const handleCheckout = async (data: {
-    customerId: string;
-    payment_method: PaymentMethod;
-  }) => {
-    setIsCheckingOut(true);
-    try {
-      await checkout(data);
-      setShowCheckout(false);
-      showToast("Factura creada exitosamente.");
-    } catch (err: any) {
-      showToast(
-        err?.response?.data?.message ?? "No se pudo completar la compra.",
-        false,
-      );
-    } finally {
-      setIsCheckingOut(false);
     }
   };
 
@@ -365,29 +325,22 @@ export default function CartPage() {
                     </div>
                   )}
 
-                  <button
-                    onClick={() => setShowCheckout(true)}
-                    disabled={items.some((i) => !i.has_stock)}
-                    className="w-full py-4 bg-black text-white font-semibold rounded-full hover:bg-gray-800 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+                  <Link
+                    href="/invoices"
+                    className="w-full py-4 bg-black text-white font-semibold rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
                   >
                     <ShoppingCart size={18} />
-                    Finalizar Compra
-                  </button>
+                    Crear factura
+                  </Link>
+                  <p className="text-center text-[11px] text-gray-500">
+                    Las facturas se generan desde la página de Facturas.
+                  </p>
                 </>
               )}
             </div>
           </div>
         </div>
       </div>
-
-      <CheckoutModal
-        isOpen={showCheckout}
-        total={summary?.total ?? 0}
-        clients={clients}
-        isSubmitting={isCheckingOut}
-        onClose={() => setShowCheckout(false)}
-        onConfirm={handleCheckout}
-      />
 
       <ConfirmModal
         isOpen={confirmClear}

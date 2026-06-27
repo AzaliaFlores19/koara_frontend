@@ -21,9 +21,10 @@ interface ProductCardProps {
   onDelete: (product: Product) => void;
   onAddToCart?: (product: Product) => void;
   isAddingToCart?: boolean;
+  canEdit?: boolean;
 }
 
-export default function ProductCard({ product, onEdit, onDelete, onAddToCart, isAddingToCart }: ProductCardProps) {
+export default function ProductCard({ product, onEdit, onDelete, onAddToCart, isAddingToCart, canEdit = true }: ProductCardProps) {
   return (
     <div className="bg-white rounded-2xl overflow-hidden border border-black flex flex-col">
       <div
@@ -45,12 +46,14 @@ export default function ProductCard({ product, onEdit, onDelete, onAddToCart, is
         <p className="font-semibold text-xs text-black">L {product.price.toFixed(2)}</p>
 
         <div className="flex gap-1.5 mt-1.5">
-          <button
-            onClick={() => onEdit(product)}
-            className="flex-1 py-1 text-[10px] font-semibold bg-black text-white rounded-full hover:bg-gray-800 transition-colors"
-          >
-            Editar
-          </button>
+          {canEdit && (
+            <button
+              onClick={() => onEdit(product)}
+              className="flex-1 py-1 text-[10px] font-semibold bg-black text-white rounded-full hover:bg-gray-800 transition-colors"
+            >
+              Editar
+            </button>
+          )}
           <button
             onClick={() => onDelete(product)}
             className="flex-1 py-1 text-[10px] font-semibold border border-black text-black rounded-full hover:bg-gray-100 transition-colors"

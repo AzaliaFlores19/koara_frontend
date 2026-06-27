@@ -18,6 +18,7 @@ import { ConfirmModal } from "@/components/ConfirmModal";
 import { productsApi } from "@/services/products.service";
 import { categoriesApi, type Category } from "@/services/categories.service";
 import { useCart } from "@/lib/cart-context";
+import { isAdmin } from "@/lib/auth";
 
 const EMPTY_FORM: ProductFormData = {
   name: "",
@@ -68,6 +69,12 @@ export default function ProductsPage() {
 
   const [addingToCartId, setAddingToCartId] = useState<string | null>(null);
   const { addItem: addItemToCart } = useCart();
+
+  // Solo los administradores pueden crear o editar productos.
+  const [canManageProducts, setCanManageProducts] = useState(false);
+  useEffect(() => {
+    setCanManageProducts(isAdmin());
+  }, []);
 
   const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
 
@@ -285,13 +292,15 @@ export default function ProductsPage() {
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold">Lista de Productos</h1>
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleOpenAddModal}
-                className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
-              >
-                <Plus size={15} />
-                Agregar Producto
-              </button>
+              {canManageProducts && (
+                <button
+                  onClick={handleOpenAddModal}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-black text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
+                >
+                  <Plus size={15} />
+                  Agregar Producto
+                </button>
+              )}
               <button
                 onClick={() => setShowManageCategories(true)}
                 className="px-4 py-2 bg-white text-black text-sm font-medium rounded-full border border-black hover:bg-gray-50 transition-colors"
@@ -379,6 +388,7 @@ export default function ProductsPage() {
                   onDelete={handleDelete}
                   onAddToCart={handleAddToCart}
                   isAddingToCart={addingToCartId === product.id}
+                  canEdit={canManageProducts}
                 />
               ))}
             </div>
