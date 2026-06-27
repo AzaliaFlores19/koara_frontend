@@ -8,7 +8,7 @@ import { usersApi } from "@/services/users.service";
 import { User } from "@/lib/api/auth";
 import { UserModal } from "@/components/users/UserModal";
 import { Table } from "@/components/Table";
-import { isAdmin as checkIsAdmin } from "@/lib/auth";
+import { isAdmin as checkIsAdmin, getAuth } from "@/lib/auth";
 import { AlertModal } from "@/components/AlertModal";
 
 export default function UsersPage() {
@@ -18,6 +18,7 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
 
   const [alertConfig, setAlertConfig] = useState<{
     isOpen: boolean;
@@ -45,6 +46,7 @@ export default function UsersPage() {
     phone: "",
   });
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserEmail, setSelectedUserEmail] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -53,6 +55,7 @@ export default function UsersPage() {
       router.replace("/dashboard");
       setIsAuthorized(false);
     } else {
+      setCurrentUserEmail(getAuth()?.email ?? null);
       setIsAuthorized(true);
     }
   }, [router]);
@@ -82,18 +85,20 @@ export default function UsersPage() {
     setModalMode("add");
     setFormData({ name: "", email: "", role: "EMPLOYEE", password: "", phone: "" });
     setSelectedUserId(null);
+    setSelectedUserEmail(null);
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (user: User) => {
     setModalMode("edit");
-    setFormData({ 
-      name: user.name, 
-      email: user.email, 
-      role: user.role, 
+    setFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role,
       phone: user.phone || ""
     });
     setSelectedUserId(user.id);
+    setSelectedUserEmail(user.email);
     setIsModalOpen(true);
   };
 
@@ -101,6 +106,7 @@ export default function UsersPage() {
     setIsModalOpen(false);
     setFormData({ name: "", email: "", role: "EMPLOYEE", password: "", phone: "" });
     setSelectedUserId(null);
+    setSelectedUserEmail(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -151,16 +157,26 @@ export default function UsersPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (user: User) => {
+    if (currentUserEmail && user.email === currentUserEmail) {
+      setAlertConfig({
+        isOpen: true,
+        title: "Acción no permitida",
+        message: "No puedes eliminar tu propio usuario.",
+      });
+      return;
+    }
+
     try {
-      await usersApi.deactivate(id);
+      await usersApi.deactivate(user.id);
       await fetchUsers();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error deactivating user:", err);
       setAlertConfig({
         isOpen: true,
         title: "Error de Eliminación",
-        message: "Error al desactivar el usuario.",
+        message:
+          err.response?.data?.message || "Error al desactivar el usuario.",
       });
     }
   };
@@ -203,29 +219,38 @@ export default function UsersPage() {
     },
     {
       header: "Acciones",
-      render: (user: User, { openConfirm }: any) => (
-        <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => handleOpenEditModal(user)}
-            className="koara-icon-btn"
-            aria-label="Editar usuario"
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            onClick={() =>
-              openConfirm({
-                message: `¿Seguro que quieres eliminar a ${user.name}? Esta acción no se puede deshacer.`,
-                onConfirm: () => handleDelete(user.id),
-              })
-            }
-            className="koara-icon-btn"
-            aria-label="Eliminar usuario"
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
-      ),
+      render: (user: User, { openConfirm }: any) => {
+        const isSelf = !!currentUserEmail && user.email === currentUserEmail;
+        return (
+          <div className="flex items-center justify-end gap-2">
+            <button
+              onClick={() => handleOpenEditModal(user)}
+              className="koara-icon-btn"
+              aria-label="Editar usuario"
+            >
+              <Pencil size={14} />
+            </button>
+            <button
+              onClick={() =>
+                openConfirm({
+                  message: `¿Seguro que quieres eliminar a ${user.name}? Esta acción no se puede deshacer.`,
+                  onConfirm: () => handleDelete(user),
+                })
+              }
+              disabled={isSelf}
+              title={
+                isSelf
+                  ? "No puedes eliminar tu propio usuario"
+                  : "Eliminar usuario"
+              }
+              className="koara-icon-btn disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Eliminar usuario"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -273,6 +298,11 @@ export default function UsersPage() {
           onClose={handleCloseModal}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
+          disableRole={
+            modalMode === "edit" &&
+            !!currentUserEmail &&
+            selectedUserEmail === currentUserEmail
+          }
         />
 
         <AlertModal

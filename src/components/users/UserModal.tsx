@@ -13,6 +13,7 @@ interface UserModalProps {
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
   isSubmitting: boolean;
+  disableRole?: boolean;
 }
 
 export function UserModal({
@@ -23,6 +24,7 @@ export function UserModal({
   onClose,
   onSubmit,
   isSubmitting,
+  disableRole = false,
 }: UserModalProps) {
   const [mounted, setMounted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -111,13 +113,19 @@ export function UserModal({
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value as User["role"] })}
-                className="koara-input-field appearance-none pr-10"
+                disabled={disableRole}
+                className="koara-input-field appearance-none pr-10 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <option value="EMPLOYEE">Empleado</option>
                 <option value="ADMIN">Administrador</option>
               </select>
               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-900 pointer-events-none" size={18} />
             </div>
+            {disableRole && (
+              <p className="text-xs text-gray-500">
+                No puedes editar tu propio rol.
+              </p>
+            )}
           </div>
 
           <div className="flex gap-4 pt-4">
