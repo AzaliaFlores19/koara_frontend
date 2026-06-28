@@ -36,6 +36,8 @@ interface InvoiceModalProps {
   onClose: () => void;
   onConfirm: (data: CreateInvoicePayload) => void;
   onBack?: () => void;
+  onDownload?: () => void;
+  onDownloadPreview?: (data: CreateInvoicePayload) => void;
   isSubmitting?: boolean;
   productOptions?: ProductOption[];
   clientOptions?: ClientOption[];
@@ -48,6 +50,8 @@ export function InvoiceModal({
   onClose,
   onConfirm,
   onBack,
+  onDownload,
+  onDownloadPreview,
   isSubmitting = false,
   clientOptions = [],
 }: InvoiceModalProps) {
@@ -179,7 +183,7 @@ export function InvoiceModal({
             </div>
           </div>
 
-          <button onClick={onClose} className="koara-btn-pink w-full py-4 text-slate-700 flex items-center justify-center gap-2">
+          <button onClick={onDownload} className="koara-btn-pink w-full py-4 text-slate-700 flex items-center justify-center gap-2">
             <Download size={18} />
             Descargar
           </button>
@@ -270,7 +274,16 @@ export function InvoiceModal({
           </div>
 
           <div className="flex gap-4 pb-2">
-            <button className="koara-btn-pink py-4 flex items-center justify-center gap-2 flex-1">
+            <button
+              onClick={() =>
+                onDownloadPreview?.({
+                  customerId,
+                  payment_method: paymentMethod,
+                  invoice_items: items as InvoiceItem[],
+                })
+              }
+              className="koara-btn-pink py-4 flex items-center justify-center gap-2 flex-1"
+            >
               <Download size={18} />
               Descargar
             </button>
