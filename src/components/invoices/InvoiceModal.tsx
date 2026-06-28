@@ -1,33 +1,32 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Plus, X, Loader2, Download, ArrowLeft, ChevronDown } from "lucide-react";
-import { Invoice, InvoiceItem } from "@/lib/types/models";
+import { X, Loader2, Download, ArrowLeft, ChevronDown } from "lucide-react";
+import { Invoice, InvoiceItem, PaymentMethod } from "@/lib/types/models";
+import { getAuth } from "@/lib/auth";
+import { useCart } from "@/lib/cart-context";
 
-interface ProductMock {
+interface ProductOption {
   id: string;
   name: string;
   price: number;
 }
 
-const MOCK_PRODUCTS: ProductMock[] = [
-  { id: "p1", name: "Skin Mask", price: 97.8 },
-  { id: "p2", name: "Centella Ampoule", price: 540 },
-  { id: "p3", name: "Glow Serum", price: 420 },
-  { id: "p4", name: "Sun Shield", price: 320 },
-];
+interface ClientOption {
+  id: string;
+  name: string;
+}
 
-const MOCK_CLIENTS = [
-  { id: "c1", name: "Juan Pérez" },
-  { id: "c2", name: "María Rodríguez" },
-  { id: "c3", name: "Carlos López" },
-  { id: "c4", name: "Ana Martínez" },
-];
+export interface CreateInvoicePayload {
+  customerId: string;
+  payment_method: PaymentMethod;
+  invoice_items: InvoiceItem[];
+}
 
-const MOCK_VENDORS = [
-  { id: "v1", name: "Admin User" },
-  { id: "v2", name: "Store Manager" },
-  { id: "v3", name: "Sales Rep" },
+const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
+  { value: "CASH", label: "Efectivo" },
+  { value: "TRANSFER", label: "Transferencia" },
+  { value: "CARD", label: "Tarjeta" },
 ];
 
 interface InvoiceModalProps {
@@ -35,10 +34,11 @@ interface InvoiceModalProps {
   mode: "create" | "view" | "preview";
   invoice?: Invoice | null;
   onClose: () => void;
-  onConfirm: (data: Partial<Invoice>) => void;
-  onNext?: (data: Partial<Invoice>) => void;
+  onConfirm: (data: CreateInvoicePayload) => void;
   onBack?: () => void;
   isSubmitting?: boolean;
+  productOptions?: ProductOption[];
+  clientOptions?: ClientOption[];
 }
 
 export function InvoiceModal({
@@ -47,21 +47,47 @@ export function InvoiceModal({
   invoice,
   onClose,
   onConfirm,
-  onNext,
   onBack,
   isSubmitting = false,
+  clientOptions = [],
 }: InvoiceModalProps) {
-  const [clientName, setClientName] = useState(invoice?.client_name || "");
-  const [vendorName, setVendorName] = useState(invoice?.vendor_name || "");
+  const { cart } = useCart();
+  const isCartEmpty = (cart?.items?.length ?? 0) === 0;
   const [items, setItems] = useState<Partial<InvoiceItem>[]>(invoice?.invoice_items || []);
+  const [customerId, setCustomerId] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
+  const [localMode, setLocalMode] = useState<"create" | "view" | "preview">(mode);
 
+  // Reset the modal whenever it (re)opens or the target invoice changes.
   useEffect(() => {
-    if (isOpen) {
-      setClientName(invoice?.client_name || MOCK_CLIENTS[0].name);
-      setVendorName(invoice?.vendor_name || MOCK_VENDORS[0].name);
-      setItems(invoice?.invoice_items || []);
+    if (!isOpen) return;
+    setItems(invoice?.invoice_items || []);
+    setCustomerId(invoice ? "" : clientOptions[0]?.id ?? "");
+    setPaymentMethod("CASH");
+    setLocalMode(mode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, invoice, mode]);
+
+  // Create flow: the invoice items mirror the shopping cart.
+  useEffect(() => {
+    if (!isOpen || invoice) return;
+    setItems(
+      (cart?.items ?? []).map((ci) => ({
+        product_id: ci.productId,
+        quantity: ci.quantity,
+        unit_price: ci.unit_price,
+        item_subtotal: ci.item_subtotal,
+        product: { name: ci.product.name } as any,
+      })),
+    );
+  }, [isOpen, invoice, cart]);
+
+  // Auto-select the first client once the list loads (create flow).
+  useEffect(() => {
+    if (clientOptions.length && !customerId) {
+      setCustomerId(clientOptions[0].id);
     }
-  }, [isOpen, invoice]);
+  }, [clientOptions, customerId]);
 
   // Lock body scroll while open
   useEffect(() => {
@@ -70,15 +96,6 @@ export function InvoiceModal({
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
   
-  // Create mode state
-  const [selectedProductId, setSelectedProductId] = useState(MOCK_PRODUCTS[0].id);
-  const [quantity, setQuantity] = useState(1);
-  const [localMode, setLocalMode] = useState<"create" | "view" | "preview">(mode);
-
-  useEffect(() => {
-    setLocalMode(mode);
-  }, [mode]);
-
   const handleBack = () => {
     if (onBack) {
       onBack();
@@ -93,34 +110,6 @@ export function InvoiceModal({
 
   const isv = subtotal * 0.15;
   const total = subtotal + isv;
-
-  const handleAddItem = () => {
-    const product = MOCK_PRODUCTS.find((p) => p.id === selectedProductId);
-    if (!product) return;
-
-    const existingItemIndex = items.findIndex((item) => item.product_id === product.id);
-    if (existingItemIndex > -1) {
-      const newItems = [...items];
-      newItems[existingItemIndex].quantity = (newItems[existingItemIndex].quantity || 0) + quantity;
-      newItems[existingItemIndex].item_subtotal = (newItems[existingItemIndex].quantity || 0) * (newItems[existingItemIndex].unit_price || 0);
-      setItems(newItems);
-    } else {
-      setItems([
-        ...items,
-        {
-          product_id: product.id,
-          quantity: quantity,
-          unit_price: product.price,
-          item_subtotal: product.price * quantity,
-          product: { name: product.name } as any,
-        },
-      ]);
-    }
-  };
-
-  const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
 
   if (!isOpen) return null;
 
@@ -198,8 +187,13 @@ export function InvoiceModal({
       );
     }
 
-    if(localMode === "preview" && invoice) {
-      const date = new Date(invoice.created_at);
+    if (localMode === "preview") {
+      const date = new Date();
+      const previewClientName =
+        clientOptions.find((c) => c.id === customerId)?.name || "—";
+      const previewVendorName = getAuth()?.name || "—";
+      const paymentLabel =
+        PAYMENT_METHODS.find((m) => m.value === paymentMethod)?.label ?? "";
       return (
         <>
           <div className="flex justify-between items-center mb-6">
@@ -216,7 +210,7 @@ export function InvoiceModal({
               <X size={20} className="text-black" />
             </button>
           </div>
-          
+
           <div className="bg-[#F4B8D4] rounded-2xl p-6 border-2 border-slate-900 mb-6 space-y-4">
             <div className="flex justify-between">
               <div>
@@ -233,19 +227,23 @@ export function InvoiceModal({
             <div className="flex justify-between">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-700">Cliente</p>
-                <p className="font-bold text-slate-900">{invoice.client_name}</p>
+                <p className="font-bold text-slate-900">{previewClientName}</p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-700">Vendedor</p>
-                <p className="font-bold text-slate-900">{invoice.vendor_name}</p>
+                <p className="font-bold text-slate-900">{previewVendorName}</p>
               </div>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-700">Método de Pago</p>
+              <p className="font-bold text-slate-900">{paymentLabel}</p>
             </div>
           </div>
 
           <h3 className="text-sm font-bold uppercase tracking-widest text-slate-900 mb-4">Productos</h3>
-          
+
           <div className="space-y-3 mb-6">
-            {invoice.invoice_items?.map((item, idx) => (
+            {items.map((item, idx) => (
               <div key={idx} className="bg-white rounded-2xl border-2 border-slate-900 p-4 flex justify-between items-center">
                 <div>
                   <p className="font-bold text-slate-900">{item.product?.name}</p>
@@ -259,15 +257,15 @@ export function InvoiceModal({
           <div className="space-y-1 text-right mb-6 px-4">
             <div className="flex justify-between text-xs font-bold text-slate-900">
               <span className="uppercase tracking-widest">SUBTOTAL</span>
-              <span>L {invoice.subtotal?.toFixed(2) ?? "0.00"}</span>
+              <span>L {subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-xs font-bold text-slate-900">
               <span className="uppercase tracking-widest">ISV (15%)</span>
-              <span>L {invoice.taxes?.toFixed(2) ?? "0.00"}</span>
+              <span>L {isv.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-lg font-black text-slate-900 pt-2 border-t border-slate-900/10">
               <span className="uppercase tracking-widest">TOTAL</span>
-              <span>L {invoice.total?.toFixed(2) ?? "0.00"}</span>
+              <span>L {total.toFixed(2)}</span>
             </div>
           </div>
 
@@ -277,7 +275,8 @@ export function InvoiceModal({
               Descargar
             </button>
             <button
-              onClick={() => onConfirm({ client_name: clientName, vendor_name: vendorName, subtotal, taxes: isv, total, invoice_items: items as InvoiceItem[] })}
+              onClick={() => onConfirm({ customerId, payment_method: paymentMethod, invoice_items: items as InvoiceItem[] })}
+              disabled={isSubmitting}
               className="koara-btn-pink py-4"
             >
               {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : "Confirmar"}
@@ -289,88 +288,69 @@ export function InvoiceModal({
 
     return (
       <>
-        <h2 className="text-2xl font-bold mb-6 text-black">Crear Factura</h2>
-        
-        <div className="space-y-4 mb-6">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-700">Nombre de Cliente</label>
-            <div className="relative">
-              <select
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                className="koara-input-field appearance-none pr-10"
-              >
-                {MOCK_CLIENTS.map((c) => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-700">Vendedor</label>
-            <div className="relative">
-              <select
-                value={vendorName}
-                onChange={(e) => setVendorName(e.target.value)}
-                className="koara-input-field appearance-none pr-10"
-              >
-                {MOCK_VENDORS.map((v) => (
-                  <option key={v.id} value={v.name}>{v.name}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            </div>
-          </div>
-        </div>
+        <h2 className="text-2xl font-bold mb-2 text-black">Crear Factura</h2>
+        <p className="text-xs font-bold text-slate-400 mb-6">
+          Selecciona el cliente y el método de pago. Los productos provienen del carrito.
+        </p>
 
-        <div className="bg-white rounded-2xl border-2 border-slate-900 p-4 mb-6">
-          <div className="flex gap-3 mb-2">
-            <div className="relative flex-1">
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-700">
+              Cliente
+            </label>
+            <div className="relative">
               <select
-                value={selectedProductId}
-                onChange={(e) => setSelectedProductId(e.target.value)}
+                value={customerId}
+                onChange={(e) => setCustomerId(e.target.value)}
                 className="w-full bg-white border-2 border-slate-900 rounded-xl px-4 py-2 font-bold text-sm outline-none appearance-none pr-10"
               >
-                {MOCK_PRODUCTS.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                {clientOptions.length === 0 && (
+                  <option value="">No hay clientes</option>
+                )}
+                {clientOptions.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
             </div>
-            <input
-              type="number"
-              min="1"
-              value={quantity}
-              onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-              className="w-20 bg-white border-2 border-slate-900 rounded-xl px-4 py-2 font-bold text-sm outline-none text-center"
-            />
-            <button
-              onClick={handleAddItem}
-              className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:opacity-90 active:scale-95 transition-all"
-            >
-              <Plus size={24} />
-            </button>
           </div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Añadir Productos a Factura</p>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-700">
+              Método de Pago
+            </label>
+            <div className="relative">
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
+                className="w-full bg-white border-2 border-slate-900 rounded-xl px-4 py-2 font-bold text-sm outline-none appearance-none pr-10"
+              >
+                {PAYMENT_METHODS.map((m) => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            </div>
+          </div>
         </div>
 
-        {/* Added Products List */}
-        {items.length > 0 && (
-          <div className="space-y-2 mb-6 pr-2">
-            {items.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center text-sm font-bold text-slate-700 bg-slate-50 p-2 rounded-xl">
-                <span>{item.product?.name} x {item.quantity}</span>
-                <div className="flex items-center gap-3">
+        {/* Cart Products List */}
+        <div className="bg-white rounded-2xl border-2 border-slate-900 p-4 mb-6">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Productos del Carrito</p>
+          {items.length > 0 ? (
+            <div className="space-y-2">
+              {items.map((item, idx) => (
+                <div key={idx} className="flex justify-between items-center text-sm font-bold text-slate-700 bg-slate-50 p-2 rounded-xl">
+                  <span>{item.product?.name} x {item.quantity}</span>
                   <span>L {item.item_subtotal?.toFixed(2)}</span>
-                  <button onClick={() => removeItem(idx)} className="text-red-500 hover:scale-110 transition-transform">
-                    <X size={16} />
-                  </button>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm font-bold text-slate-400 text-center py-4">
+              El carrito está vacío. Agrega productos desde el carrito.
+            </p>
+          )}
+        </div>
 
         <div className="bg-[#F4B8D4]/40 rounded-2xl p-6 border-2 border-slate-900 mb-6 space-y-2">
           <div className="flex justify-between text-xs font-bold text-slate-900">
@@ -392,8 +372,8 @@ export function InvoiceModal({
             Cancelar
           </button>
           <button
-            onClick={() => onNext?.({ client_name: clientName, vendor_name: vendorName, subtotal, taxes: isv, total, invoice_items: items as InvoiceItem[], created_at: new Date().toISOString() })}
-            disabled={isSubmitting || items.length === 0 || !clientName}
+            onClick={() => setLocalMode("preview")}
+            disabled={isSubmitting || isCartEmpty || !customerId}
             className="koara-btn-pink py-4"
           >
             {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : "Siguiente"}

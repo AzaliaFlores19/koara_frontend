@@ -2,10 +2,11 @@
 
 import { useState, useEffect, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation"; 
-import { Menu, X, Home, Package, Users, FileText, UserCog, BarChart, Bot, ClipboardList } from "lucide-react";
+import { Menu, X, Home, Package, Users, FileText, UserCog, BarChart, Bot, ClipboardList, ShoppingCart } from "lucide-react";
 import koaraLogo from "@/imports/logo_insta_2.jpg"; 
 import titleIcon from "@/imports/image-removebg-preview_1-2.png";
 import { getAuth } from "@/lib/api/auth.api";
+import { useCart } from "@/lib/cart-context";
 
 interface LayoutProps {
   children: ReactNode;
@@ -27,8 +28,9 @@ export default function DashboardLayout({ children }: LayoutProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userData, setUserData] = useState<{ name?: string; email?: string; role?: string } | null>(null);
   
-  const router = useRouter(); 
-  const pathname = usePathname(); 
+  const router = useRouter();
+  const pathname = usePathname();
+  const { count: cartCount } = useCart();
 
   useEffect(() => {
     const auth = getAuth();
@@ -41,7 +43,9 @@ export default function DashboardLayout({ children }: LayoutProps) {
   const navItems = allNavItems.filter((item) => !item.adminOnly || isAdmin);
 
   const currentItem = allNavItems.find(item => item.path === pathname);
-  const title = currentItem ? currentItem.name : " Mi Perfil";
+  const title = pathname === "/cart"
+    ? "Carrito"
+    : currentItem ? currentItem.name : " Mi Perfil";
 
   return (
     <div className="min-h-screen flex flex-col relative bg-koara-bg">
@@ -65,6 +69,19 @@ export default function DashboardLayout({ children }: LayoutProps) {
             <img src={titleIcon.src} alt="" className="h-7 w-7 object-contain" />
             <span className="text-black" style={{ fontSize: "1.1rem", fontWeight: "600" }}>{title}</span>
           </div>
+
+          <button
+            onClick={() => router.push("/cart")}
+            className="relative ml-auto p-2 hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Carrito"
+          >
+            <ShoppingCart size={24} className="text-black" />
+            {cartCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-koara-dark text-white text-[10px] font-bold leading-none">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
+          </button>
         </header>
 
         {/* Sidebar */}

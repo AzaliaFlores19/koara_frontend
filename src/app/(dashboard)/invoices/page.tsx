@@ -6,8 +6,14 @@ import DashboardLayout from "@/components/layout/layout";
 import { Table } from "@/components/Table";
 import { Invoice } from "@/lib/types/models";
 import { invoicesApi } from "@/lib/api/invoices";
-import { InvoiceModal } from "@/components/invoices/InvoiceModal";
+import {
+  InvoiceModal,
+  type CreateInvoicePayload,
+} from "@/components/invoices/InvoiceModal";
 import { DateRangePicker } from "@/components/audit-logs/DateRangePicker";
+import { productsApi } from "@/services/products.service";
+import { clientsApi } from "@/services/clients.service";
+import { getAuth } from "@/lib/auth";
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -25,6 +31,10 @@ export default function InvoicesPage() {
   const [modalMode, setModalMode] = useState<"create" | "view" | "preview">("create");
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [productOptions, setProductOptions] = useState<
+    { id: string; name: string; price: number }[]
+  >([]);
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
 
   const fetchInvoices = async () => {
     try {
@@ -41,6 +51,27 @@ export default function InvoicesPage() {
 
   useEffect(() => {
     fetchInvoices();
+  }, []);
+
+  useEffect(() => {
+    productsApi
+      .getAll(1, 100)
+      .then((res) =>
+        setProductOptions(
+          res.data.map((p) => ({ id: p.id, name: p.name, price: p.price })),
+        ),
+      )
+      .catch(() => setProductOptions([]));
+  }, []);
+
+  useEffect(() => {
+    clientsApi
+      .getAll(1, 100)
+      .then((res) => {
+        const list = (res?.data ?? res ?? []) as { id: string; name: string }[];
+        setClients(list.map((c) => ({ id: c.id, name: c.name })));
+      })
+      .catch(() => setClients([]));
   }, []);
 
   const handleOpenCreateModal = () => {
@@ -60,40 +91,40 @@ export default function InvoicesPage() {
     setSelectedInvoice(null);
   };
 
-  const handleNextToPreview = (data: Partial<Invoice>) => {
-    setSelectedInvoice(data as Invoice);
-    setModalMode("preview");
-  };
-
-  const handleBackToCreate = () => {
-    setModalMode("create");
-  };
-
-  const handleConfirmInvoice = async (data: Partial<Invoice>) => {
+  const handleConfirmInvoice = async (data: CreateInvoicePayload) => {
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      
+      // TODO: integrar con la API (POST /invoices). Por ahora se crea localmente.
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      const items = data.invoice_items ?? [];
+      const subtotal = items.reduce(
+        (acc, item) => acc + (item.unit_price ?? 0) * (item.quantity ?? 0),
+        0,
+      );
+      const taxes = subtotal * 0.15;
+      const total = subtotal + taxes;
+      const client = clients.find((c) => c.id === data.customerId);
+
       const newInvoice: Invoice = {
-        id: (Date.now()).toString(),
+        id: Date.now().toString(),
         invoice_number: (invoices.length + 1).toString(),
-        client_name: data.client_name || "",
-        vendor_name: data.vendor_name || "",
-        subtotal: data.subtotal || 0,
-        taxes: data.taxes || 0,
-        total: data.total || 0,
+        client_name: client?.name || "",
+        vendor_name: getAuth()?.name || "",
+        subtotal,
+        taxes,
+        total,
         status: "ISSUED",
-        created_at: data.created_at || new Date().toISOString(),
-        invoice_items: data.invoice_items || [],
-        payment_method: "CASH", // Default
+        created_at: new Date().toISOString(),
+        invoice_items: items,
+        payment_method: data.payment_method,
         cai_range_id: "mock-range",
-        client_id: "mock-client",
+        client_id: data.customerId,
         user_id: "mock-user",
       };
 
       setInvoices((prev) => [newInvoice, ...prev]);
-      
+
       // Show final view after creation
       setSelectedInvoice(newInvoice);
       setModalMode("view");
@@ -244,10 +275,10 @@ export default function InvoicesPage() {
           isOpen={isModalOpen}
           mode={modalMode}
           invoice={selectedInvoice}
+          productOptions={productOptions}
+          clientOptions={clients}
           onClose={handleCloseModal}
           onConfirm={handleConfirmInvoice}
-          onNext={handleNextToPreview}
-          onBack={handleBackToCreate}
           isSubmitting={isSubmitting}
         />
 
