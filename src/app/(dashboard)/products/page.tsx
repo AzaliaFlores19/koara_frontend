@@ -301,12 +301,14 @@ export default function ProductsPage() {
                   Agregar Producto
                 </button>
               )}
-              <button
-                onClick={() => setShowManageCategories(true)}
-                className="px-4 py-2 bg-white text-black text-sm font-medium rounded-full border border-black hover:bg-gray-50 transition-colors"
-              >
-                Gestionar Categorías
-              </button>
+              {canManageProducts && (
+                <button
+                  onClick={() => setShowManageCategories(true)}
+                  className="px-4 py-2 bg-white text-black text-sm font-medium rounded-full border border-black hover:bg-gray-50 transition-colors"
+                >
+                  Gestionar Categorías
+                </button>
+              )}
             </div>
           </div>
 

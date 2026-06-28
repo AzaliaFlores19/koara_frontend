@@ -54,12 +54,14 @@ export default function ProductCard({ product, onEdit, onDelete, onAddToCart, is
               Editar
             </button>
           )}
-          <button
-            onClick={() => onDelete(product)}
-            className="flex-1 py-1 text-[10px] font-semibold border border-black text-black rounded-full hover:bg-gray-100 transition-colors"
-          >
-            Eliminar
-          </button>
+          {canEdit && (
+            <button
+              onClick={() => onDelete(product)}
+              className="flex-1 py-1 text-[10px] font-semibold border border-black text-black rounded-full hover:bg-gray-100 transition-colors"
+            >
+              Eliminar
+            </button>
+          )}
         </div>
 
         {onAddToCart && (
