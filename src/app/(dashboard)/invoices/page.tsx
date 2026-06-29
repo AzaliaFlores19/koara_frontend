@@ -13,7 +13,8 @@ import {
 import { DateRangePicker } from "@/components/audit-logs/DateRangePicker";
 import { productsApi } from "@/services/products.service";
 import { clientsApi } from "@/services/clients.service";
-import { getAuth } from "@/lib/auth";
+import { getAuth } from "@/lib/api/auth.api";
+import { useCart } from "@/lib/cart-context";
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -35,6 +36,7 @@ export default function InvoicesPage() {
     { id: string; name: string; price: number }[]
   >([]);
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
+  const { clear: clearCart } = useCart();
 
   const fetchInvoices = async () => {
     try {
@@ -92,47 +94,105 @@ export default function InvoicesPage() {
   };
 
   const handleConfirmInvoice = async (data: CreateInvoicePayload) => {
+    const userId = getAuth()?.id;
+    if (!userId) {
+      alert("Sesión no válida. Inicia sesión de nuevo.");
+      return;
+    }
+
+    const items = (data.invoice_items ?? [])
+      .filter((item) => item.product_id)
+      .map((item) => ({
+        productId: item.product_id as string,
+        quantity: item.quantity ?? 0,
+      }));
+
+    if (items.length === 0) {
+      alert("Agrega al menos un producto a la factura.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // TODO: integrar con la API (POST /invoices). Por ahora se crea localmente.
-      await new Promise((resolve) => setTimeout(resolve, 600));
-
-      const items = data.invoice_items ?? [];
-      const subtotal = items.reduce(
-        (acc, item) => acc + (item.unit_price ?? 0) * (item.quantity ?? 0),
-        0,
-      );
-      const taxes = subtotal * 0.15;
-      const total = subtotal + taxes;
-      const client = clients.find((c) => c.id === data.customerId);
-
-      const newInvoice: Invoice = {
-        id: Date.now().toString(),
-        invoice_number: (invoices.length + 1).toString(),
-        client_name: client?.name || "",
-        vendor_name: getAuth()?.name || "",
-        subtotal,
-        taxes,
-        total,
-        status: "ISSUED",
-        created_at: new Date().toISOString(),
-        invoice_items: items,
+      const created = await invoicesApi.create({
+        customerId: data.customerId,
+        userId,
         payment_method: data.payment_method,
-        cai_range_id: "mock-range",
-        client_id: data.customerId,
-        user_id: "mock-user",
-      };
+        items,
+      });
+      // The backend omits the cashier on the response; fill it in for display.
+      if (!created.vendor_name) {
+        created.vendor_name = getAuth()?.name ?? "";
+      }
 
-      setInvoices((prev) => [newInvoice, ...prev]);
+      // Reflect the new invoice locally and clear the cart it came from.
+      setInvoices((prev) => [created, ...prev]);
+      await clearCart().catch(() => undefined);
 
       // Show final view after creation
-      setSelectedInvoice(newInvoice);
+      setSelectedInvoice(created);
       setModalMode("view");
-    } catch (err) {
+
+      // Re-sync with the server so totals/numbering match exactly.
+      fetchInvoices();
+    } catch (err: any) {
       console.error("Error saving invoice:", err);
-      alert("Error al guardar la factura.");
+      const message =
+        err?.response?.data?.message ?? "Error al guardar la factura.";
+      alert(Array.isArray(message) ? message.join("\n") : message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDownloadInvoice = async (invoice: Invoice) => {
+    try {
+      // Dedicated print endpoint for already-issued invoices.
+      const blob = await invoicesApi.getPdf(invoice.id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `factura-${invoice.invoice_number}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Error downloading invoice:", err);
+      alert("Error al descargar la factura.");
+    }
+  };
+
+  const handleDownloadPreview = async (data: CreateInvoicePayload) => {
+    const userId = getAuth()?.id;
+    if (!userId) {
+      alert("Sesión no válida. Inicia sesión de nuevo.");
+      return;
+    }
+    const items = (data.invoice_items ?? [])
+      .filter((item) => item.product_id)
+      .map((item) => ({
+        productId: item.product_id as string,
+        quantity: item.quantity ?? 0,
+      }));
+    if (items.length === 0) {
+      alert("Agrega al menos un producto a la factura.");
+      return;
+    }
+    try {
+      const blob = await invoicesApi.preview({
+        customerId: data.customerId,
+        userId,
+        payment_method: data.payment_method,
+        items,
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "vista-previa-factura.pdf";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Error downloading preview:", err);
+      alert("Error al generar la vista previa.");
     }
   };
 
@@ -206,6 +266,7 @@ export default function InvoicesPage() {
             <Eye size={14} />
           </button>
           <button
+            onClick={() => handleDownloadInvoice(invoice)}
             className="koara-icon-btn"
             aria-label="Descargar factura"
           >
@@ -279,6 +340,10 @@ export default function InvoicesPage() {
           clientOptions={clients}
           onClose={handleCloseModal}
           onConfirm={handleConfirmInvoice}
+          onDownload={() =>
+            selectedInvoice && handleDownloadInvoice(selectedInvoice)
+          }
+          onDownloadPreview={handleDownloadPreview}
           isSubmitting={isSubmitting}
         />
 
