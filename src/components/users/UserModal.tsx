@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Loader2, ChevronDown, Eye, EyeOff } from "lucide-react";
-import { User } from "@/lib/api/auth";
+import { User } from "@/lib/types/models";
 
 interface UserModalProps {
   isOpen: boolean;

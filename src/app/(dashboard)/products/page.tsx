@@ -18,7 +18,7 @@ import { ConfirmModal } from "@/components/ConfirmModal";
 import { productsApi } from "@/services/products.service";
 import { categoriesApi, type Category } from "@/services/categories.service";
 import { useCart } from "@/lib/cart-context";
-import { isAdmin } from "@/lib/auth";
+import { isAdmin } from "@/lib/api/auth.api";
 
 const EMPTY_FORM: ProductFormData = {
   name: "",

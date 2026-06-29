@@ -10,7 +10,7 @@ import { usersApi } from "@/services/users.service";
 import { AuditLog, AuditEntity, AuditAction, User } from "@/lib/types/models";
 import { Dropdown } from "@/components/Dropdown";
 import { DateRangePicker } from "@/components/audit-logs/DateRangePicker";
-import { isAdmin } from "@/lib/auth";
+import { isAdmin } from "@/lib/api/auth.api";
 
 export default function AuditLogsPage() {
   const router = useRouter();

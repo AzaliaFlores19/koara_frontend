@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { Search, Plus, Pencil, Trash2, Shield, Loader2 } from "lucide-react";
 import DashboardLayout from "@/components/layout/layout";
 import { usersApi } from "@/services/users.service";
-import { User } from "@/lib/api/auth";
+import { User } from "@/lib/types/models";
 import { UserModal } from "@/components/users/UserModal";
 import { Table } from "@/components/Table";
-import { isAdmin as checkIsAdmin, getAuth } from "@/lib/auth";
+import { isAdmin as checkIsAdmin, getAuth } from "@/lib/api/auth.api";
 import { AlertModal } from "@/components/AlertModal";
 
 export default function UsersPage() {

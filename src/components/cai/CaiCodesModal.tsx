@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, Plus, Power, Pencil } from "lucide-react";
-import { CAICode } from "@/lib/types/index";
+import { CAICode } from "@/lib/types/models";
 
 interface CaiCodesModalProps {
   isOpen: boolean;

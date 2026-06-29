@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { getAuth, isAdmin } from "@/lib/auth";
+import { getAuth, isAdmin } from "@/lib/api/auth.api";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();

@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api/axios";
-import { User } from "@/lib/api/auth";
+import { User } from "@/lib/types/models";
 import { getAuth, isAdmin } from "@/lib/api/auth.api"; 
 
 export const usersApi = {

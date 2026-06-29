@@ -5,7 +5,7 @@ import { Search, Plus, ChevronDown, Loader2, Eye, Download } from "lucide-react"
 import DashboardLayout from "@/components/layout/layout";
 import { Table } from "@/components/Table";
 import { Invoice } from "@/lib/types/models";
-import { invoicesApi } from "@/lib/api/invoices";
+import { invoicesApi } from "@/services/invoices.service";
 import {
   InvoiceModal,
   type CreateInvoicePayload,
@@ -13,7 +13,7 @@ import {
 import { DateRangePicker } from "@/components/audit-logs/DateRangePicker";
 import { productsApi } from "@/services/products.service";
 import { clientsApi } from "@/services/clients.service";
-import { getAuth } from "@/lib/api/auth.api";
+import { getAuth, isAdmin } from "@/lib/api/auth.api";
 import { useCart } from "@/lib/cart-context";
 
 export default function InvoicesPage() {
@@ -197,6 +197,13 @@ export default function InvoicesPage() {
   };
 
   const filteredInvoices = invoices.filter((invoice) => {
+    const user = getAuth();
+    const isUserAdmin = isAdmin();
+
+    if (!isUserAdmin && invoice.vendor_name !== user?.name) {
+      return false;
+    }
+
     const matchesSearch = invoice.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          invoice.invoice_number.includes(searchQuery);
     const matchesStatus = statusFilter === "ALL" || invoice.status === statusFilter;

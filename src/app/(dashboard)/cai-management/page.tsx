@@ -124,7 +124,7 @@ export default function CaiManagementPage() {
         const activeRange = await caiApi.getActiveRange();
         
         if (activeRange) {
-          const remaining = activeRange.range_end - (activeRange as any).current_invoice_number;
+          const remaining = activeRange.range_end - (activeRange as any).current_invoice_number + 1;
           
           if (remaining > 0) {
             setWarningData({ remainingInvoices: remaining });

@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { X, Loader2, Download, ArrowLeft, ChevronDown } from "lucide-react";
 import { Invoice, InvoiceItem, PaymentMethod } from "@/lib/types/models";
-import { getAuth } from "@/lib/auth";
+import { getAuth } from "@/lib/api/auth.api";
 import { useCart } from "@/lib/cart-context";
 
 interface ProductOption {
