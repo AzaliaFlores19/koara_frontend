@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Koara — Frontend
 
-## Getting Started
+Frontend del sistema de facturación y gestión **Koara**, construido con [Next.js](https://nextjs.org), React, TypeScript y Tailwind CSS.
 
-First, run the development server:
+Esta aplicación consume la API del backend de Koara, disponible en:
+
+ **Backend:** [AzaliaFlores19/Koara_backend](https://github.com/AzaliaFlores19/Koara_backend)
+
+## Características
+
+-  **Autenticación** — login, recuperación y restablecimiento de contraseña.
+-  **Dashboard** — vista general con métricas del negocio.
+-  **Facturación** — creación y gestión de facturas.
+-  **Gestión de CAI** — control de rangos y autorizaciones de facturación.
+-  **Productos e inventario** — catálogo y categorías.
+-  **Clientes y usuarios** — administración de cuentas y permisos.
+-  **Carrito de compras** — punto de venta.
+-  **Reportes** — ventas, más vendidos, compradores frecuentes.
+-  **Registros de auditoría** — historial de acciones.
+-  **Branding** — personalización de la empresa.
+
+## Tecnologías
+
+- [Next.js 16](https://nextjs.org) (App Router)
+- [React 19](https://react.dev)
+- [TypeScript](https://www.typescriptlang.org)
+- [Tailwind CSS 4](https://tailwindcss.com)
+- [Axios](https://axios-http.com) para las peticiones HTTP
+- [Lucide React](https://lucide.dev) para los iconos
+
+## Requisitos previos
+
+- [Node.js](https://nodejs.org) 18 o superior
+- [pnpm](https://pnpm.io) (gestor de paquetes usado en el proyecto)
+- El [backend de Koara](https://github.com/AzaliaFlores19/Koara_backend) corriendo localmente o desplegado.
+
+## Instalación
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Clonar el repositorio
+git clone <url-del-repositorio>
+cd koara_frontend
+
+# Instalar dependencias
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Configuración
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Crea un archivo `.env.local` en la raíz del proyecto con la URL de la API del backend:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+NEXT_PUBLIC_API_URL=http://localhost:4000
+```
 
-## Learn More
+> Si no se define esta variable, la aplicación usará `http://localhost:4000` por defecto.
 
-To learn more about Next.js, take a look at the following resources:
+## Uso
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Iniciar el servidor de desarrollo
+pnpm dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Abre [http://localhost:3000](http://localhost:3000) en tu navegador para ver la aplicación.
 
-## Deploy on Vercel
+### Otros comandos
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm build   # Compilar para producción
+pnpm start   # Iniciar el servidor de producción
+pnpm lint    # Ejecutar el linter
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Estructura del proyecto
+
+```
+src/
+├── app/            # Rutas (App Router): autenticación y dashboard
+├── components/     # Componentes reutilizables por módulo
+├── lib/            # Configuración de API, contextos y tipos
+├── services/       # Servicios que consumen la API del backend
+└── styles/         # Estilos globales
+```
+
+## Proyectos relacionados
+
+- **Backend:** [AzaliaFlores19/Koara_backend](https://github.com/AzaliaFlores19/Koara_backend)
