@@ -11,27 +11,42 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    // 1. Define routes that require authentication
-    const protectedRoutes = ["/profile", "/dashboard", "/inventory", "/users", "/clients", "/invoices", "/cai-management", "/reports", "/audit-logs", "/branding"];
-    
-    // 2. Define routes that require ADMIN role
+    setAuthorized(false);
+
+    const publicRoutes = ["/", "/login", "/forgot-password", "/reset-password"];
+    const protectedRoutes = ["/profile", "/dashboard", "/products", "/users", "/clients", "/invoices", "/cai-management", "/reports", "/audit-logs", "/branding"];
     const adminRoutes = ["/users", "/cai-management", "/reports", "/audit-logs", "/branding"];
-    
+
+    const isPublic = publicRoutes.some(route => pathname === route);
     const isProtected = protectedRoutes.some(route => pathname.startsWith(route));
     const isAdminRoute = adminRoutes.some(route => pathname.startsWith(route));
-    
+
     const auth = getAuth();
     const token = auth?.token;
 
-    if (isProtected && !token) {
-      setAuthorized(false);
-      router.push("/login"); 
-    } else if (isAdminRoute && !isAdmin()) {
-      setAuthorized(false);
-      router.push("/dashboard");
-    } else {
-      setAuthorized(true);
+    if (!token) {
+      if (isPublic) {
+        setAuthorized(true);
+      } else {
+        setAuthorized(false);
+        router.push("/login");
+      }
+      return;
     }
+
+    if (isAdminRoute && !isAdmin()) {
+      setAuthorized(false);
+      router.push("/login");
+      return;
+    }
+
+    if (!isProtected && !isPublic) {
+      setAuthorized(false);
+      router.push("/login");
+      return;
+    }
+
+    setAuthorized(true);
   }, [pathname, router]);
 
   // Mientras el sistema verifica el JWT, mostramos una pantalla de carga limpia

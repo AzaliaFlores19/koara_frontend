@@ -138,7 +138,7 @@ export function InvoiceModal({
               <div className="text-right">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-700">Fecha y Hora</p>
                 <p className="font-bold text-slate-900">
-                  {date.getFullYear()} - {date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                  {date.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "2-digit" })} - {date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", hour12: true })}
                 </p>
               </div>
             </div>
@@ -224,7 +224,7 @@ export function InvoiceModal({
               <div className="text-right">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-700">Fecha y Hora</p>
                 <p className="font-bold text-slate-900">
-                  {date.getFullYear()} - {date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                  {date.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "2-digit" })} - {date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", hour12: true })}
                 </p>
               </div>
             </div>

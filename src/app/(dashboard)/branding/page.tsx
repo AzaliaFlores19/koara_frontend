@@ -278,6 +278,7 @@ export default function BrandingPage() {
                           src={logoPreview}
                           alt="Logo de la empresa"
                           className="h-full w-full object-cover"
+                          onError={(e) => { e.currentTarget.src = defaultLogo.src; }}
                         />
                       </div>
 
