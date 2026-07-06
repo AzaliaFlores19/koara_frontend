@@ -14,7 +14,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     setAuthorized(false);
 
     const publicRoutes = ["/", "/login", "/forgot-password", "/reset-password"];
-    const protectedRoutes = ["/profile", "/dashboard", "/products", "/users", "/clients", "/invoices", "/cai-management", "/reports", "/audit-logs", "/branding"];
+    const protectedRoutes = ["/profile", "/dashboard", "/products", "/users", "/clients", "/invoices", "/cart", "/cai-management", "/reports", "/audit-logs", "/branding"];
     const adminRoutes = ["/users", "/cai-management", "/reports", "/audit-logs", "/branding"];
 
     const isPublic = publicRoutes.some(route => pathname === route);
