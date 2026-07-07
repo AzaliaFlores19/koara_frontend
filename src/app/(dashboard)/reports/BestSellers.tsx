@@ -4,15 +4,13 @@ import { useState, useEffect } from "react";
 import { CheckCircle } from "lucide-react";
 import { Table } from "@/components/Table";
 import { reportsApi, type TopProduct } from "@/services/reports.service";
+import { formatCurrency as formatLempiras, formatNumber } from "@/lib/format";
 
 function today() { return new Date().toISOString().split("T")[0]; }
 function firstOfMonth() {
   const d = new Date();
   return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split("T")[0];
 }
-
-const formatLempiras = (value: number) =>
-  new Intl.NumberFormat("es-HN", { style: "currency", currency: "HNL", minimumFractionDigits: 2 }).format(value);
 
 type RowItem = TopProduct & { id: string };
 
@@ -59,7 +57,7 @@ export default function BestSellersTab() {
     {
       header: "Unidades Vendidas",
       render: (item: RowItem) => (
-        <span className="text-sm text-gray-500">{item.total_quantity_sold}</span>
+        <span className="text-sm text-gray-500">{formatNumber(item.total_quantity_sold)}</span>
       ),
     },
     {

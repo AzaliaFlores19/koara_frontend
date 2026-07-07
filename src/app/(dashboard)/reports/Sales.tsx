@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { CheckCircle } from "lucide-react";
 import Pagination from "@/components/inventory/Pagination";
 import { reportsApi, type SalesListItem } from "@/services/reports.service";
+import { formatCurrency as formatLempiras } from "@/lib/format";
 
 const ROWS_PER_PAGE = 6;
 
@@ -12,9 +13,6 @@ function firstOfMonth() {
   const d = new Date();
   return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split("T")[0];
 }
-
-const formatLempiras = (value: number) =>
-  new Intl.NumberFormat("es-HN", { style: "currency", currency: "HNL", minimumFractionDigits: 2 }).format(value);
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("es-HN");

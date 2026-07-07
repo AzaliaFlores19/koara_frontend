@@ -5,6 +5,7 @@ import { X, Loader2, Download, ArrowLeft, ChevronDown } from "lucide-react";
 import { Invoice, InvoiceItem, PaymentMethod } from "@/lib/types/models";
 import { getAuth } from "@/lib/api/auth.api";
 import { useCart } from "@/lib/cart-context";
+import { formatCurrency, formatNumber } from "@/lib/format";
 
 interface ProductOption {
   id: string;
@@ -66,7 +67,7 @@ export function InvoiceModal({
   useEffect(() => {
     if (!isOpen) return;
     setItems(invoice?.invoice_items || []);
-    setCustomerId(invoice ? "" : clientOptions[0]?.id ?? "");
+    setCustomerId("");
     setPaymentMethod("CASH");
     setLocalMode(mode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,13 +86,6 @@ export function InvoiceModal({
       })),
     );
   }, [isOpen, invoice, cart]);
-
-  // Auto-select the first client once the list loads (create flow).
-  useEffect(() => {
-    if (clientOptions.length && !customerId) {
-      setCustomerId(clientOptions[0].id);
-    }
-  }, [clientOptions, customerId]);
 
   // Lock body scroll while open
   useEffect(() => {
@@ -161,9 +155,9 @@ export function InvoiceModal({
               <div key={idx} className="bg-white rounded-2xl border-2 border-slate-900 p-4 flex justify-between items-center">
                 <div>
                   <p className="font-bold text-slate-900">{item.product?.name}</p>
-                  <p className="text-xs font-bold text-slate-500">Cantidad: {item.quantity}</p>
+                  <p className="text-xs font-bold text-slate-500">Cantidad: {formatNumber(item.quantity ?? 0)}</p>
                 </div>
-                <p className="font-bold text-slate-900">L {item.item_subtotal?.toFixed(2)}</p>
+                <p className="font-bold text-slate-900">{formatCurrency(item.item_subtotal ?? 0)}</p>
               </div>
             ))}
           </div>
@@ -171,15 +165,15 @@ export function InvoiceModal({
           <div className="space-y-1 text-right mb-6 px-4">
             <div className="flex justify-between text-xs font-bold text-slate-900">
               <span className="uppercase tracking-widest">SUBTOTAL</span>
-              <span>L {invoice.subtotal?.toFixed(2) ?? "0.00"}</span>
+              <span>{formatCurrency(invoice.subtotal ?? 0)}</span>
             </div>
             <div className="flex justify-between text-xs font-bold text-slate-900">
               <span className="uppercase tracking-widest">ISV (15%)</span>
-              <span>L {invoice.taxes?.toFixed(2) ?? "0.00"}</span>
+              <span>{formatCurrency(invoice.taxes ?? 0)}</span>
             </div>
             <div className="flex justify-between text-lg font-black text-slate-900 pt-2 border-t border-slate-900/10">
               <span className="uppercase tracking-widest">TOTAL</span>
-              <span>L {invoice.total?.toFixed(2) ?? "0.00"}</span>
+              <span>{formatCurrency(invoice.total ?? 0)}</span>
             </div>
           </div>
 
@@ -251,9 +245,9 @@ export function InvoiceModal({
               <div key={idx} className="bg-white rounded-2xl border-2 border-slate-900 p-4 flex justify-between items-center">
                 <div>
                   <p className="font-bold text-slate-900">{item.product?.name}</p>
-                  <p className="text-xs font-bold text-slate-500">Cantidad: {item.quantity}</p>
+                  <p className="text-xs font-bold text-slate-500">Cantidad: {formatNumber(item.quantity ?? 0)}</p>
                 </div>
-                <p className="font-bold text-slate-900">L {item.item_subtotal?.toFixed(2)}</p>
+                <p className="font-bold text-slate-900">{formatCurrency(item.item_subtotal ?? 0)}</p>
               </div>
             ))}
           </div>
@@ -261,15 +255,15 @@ export function InvoiceModal({
           <div className="space-y-1 text-right mb-6 px-4">
             <div className="flex justify-between text-xs font-bold text-slate-900">
               <span className="uppercase tracking-widest">SUBTOTAL</span>
-              <span>L {subtotal.toFixed(2)}</span>
+              <span>{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex justify-between text-xs font-bold text-slate-900">
               <span className="uppercase tracking-widest">ISV (15%)</span>
-              <span>L {isv.toFixed(2)}</span>
+              <span>{formatCurrency(isv)}</span>
             </div>
             <div className="flex justify-between text-lg font-black text-slate-900 pt-2 border-t border-slate-900/10">
               <span className="uppercase tracking-widest">TOTAL</span>
-              <span>L {total.toFixed(2)}</span>
+              <span>{formatCurrency(total)}</span>
             </div>
           </div>
 
@@ -317,8 +311,10 @@ export function InvoiceModal({
                 onChange={(e) => setCustomerId(e.target.value)}
                 className="w-full bg-white border-2 border-slate-900 rounded-xl px-4 py-2 font-bold text-sm outline-none appearance-none pr-10"
               >
-                {clientOptions.length === 0 && (
+                {clientOptions.length === 0 ? (
                   <option value="">No hay clientes</option>
+                ) : (
+                  <option value="" disabled>Selecciona un cliente</option>
                 )}
                 {clientOptions.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
@@ -353,8 +349,8 @@ export function InvoiceModal({
             <div className="space-y-2">
               {items.map((item, idx) => (
                 <div key={idx} className="flex justify-between items-center text-sm font-bold text-slate-700 bg-slate-50 p-2 rounded-xl">
-                  <span>{item.product?.name} x {item.quantity}</span>
-                  <span>L {item.item_subtotal?.toFixed(2)}</span>
+                  <span>{item.product?.name} x {formatNumber(item.quantity ?? 0)}</span>
+                  <span>{formatCurrency(item.item_subtotal ?? 0)}</span>
                 </div>
               ))}
             </div>
@@ -368,15 +364,15 @@ export function InvoiceModal({
         <div className="bg-[#F4B8D4]/40 rounded-2xl p-6 border-2 border-slate-900 mb-6 space-y-2">
           <div className="flex justify-between text-xs font-bold text-slate-900">
             <span>Subtotal</span>
-            <span>L {subtotal.toFixed(2)}</span>
+            <span>{formatCurrency(subtotal)}</span>
           </div>
           <div className="flex justify-between text-xs font-bold text-slate-900">
             <span>ISV (15%)</span>
-            <span>L {isv.toFixed(2)}</span>
+            <span>{formatCurrency(isv)}</span>
           </div>
           <div className="flex justify-between text-xl font-black text-slate-900 pt-2">
             <span>TOTAL</span>
-            <span>L {total.toFixed(2)}</span>
+            <span>{formatCurrency(total)}</span>
           </div>
         </div>
 

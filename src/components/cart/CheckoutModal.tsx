@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { X, Loader2, ChevronDown } from "lucide-react";
 import type { PaymentMethod } from "@/lib/types/models";
+import { formatCurrency } from "@/lib/format";
 
 export interface CheckoutClient {
   id: string;
@@ -125,7 +126,7 @@ export function CheckoutModal({
             <div className="bg-[#F4B8D4]/40 rounded-2xl p-6 border-2 border-slate-900 mb-6">
               <div className="flex justify-between text-xl font-black text-slate-900">
                 <span>TOTAL</span>
-                <span>L {total.toFixed(2)}</span>
+                <span>{formatCurrency(total)}</span>
               </div>
             </div>
 

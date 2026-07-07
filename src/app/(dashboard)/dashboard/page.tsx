@@ -21,6 +21,7 @@ import DashboardLayout from "@/components/layout/layout";
 import { isAdmin } from "@/lib/api/auth.api";
 
 import { dashboardService, DashboardMetrics } from "@/services/dashboard.service";
+import { formatNumber } from "@/lib/format";
 import koaraLogo from "@/imports/logo_insta_2.jpg";
 import tocoboLogo from "@/imports/Tocobo_logo.png";
 import medicubeLogo from "@/imports/Medicube_logo.webp";
@@ -143,7 +144,7 @@ export default function Dashboard() {
                     <div key={product.name} className="flex justify-between items-center text-sm">
                       <span className="truncate text-foreground/80 max-w-[180px]">{product.name}</span>
                       <span className="rounded-full bg-[#f6c4a0] px-2 py-0.5 text-xs font-semibold text-foreground">
-                        {product.stock}
+                        {formatNumber(product.stock)}
                       </span>
                     </div>
                   ))}

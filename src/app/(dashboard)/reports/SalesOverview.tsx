@@ -7,6 +7,7 @@ import SalesTab from "./Sales";
 import FrequentShoppersTab from "./FrequentShoppers";
 import { reportsApi, type AnalyticsData } from "@/services/reports.service";
 import BestSellersTab from "./BestSellers";
+import { formatCurrency, formatNumber } from "@/lib/format";
 
 const TABS = ["Resumen de Ventas", "Más Vendidos", "Ventas", "Clientes Frecuentes"];
 
@@ -24,7 +25,7 @@ function firstOfMonth() {
 }
 
 function fmt(n: number) {
-  return `L ${n.toFixed(2)}`;
+  return formatCurrency(n);
 }
 
 function SalesOverviewTab() {
@@ -56,10 +57,10 @@ function SalesOverviewTab() {
   useEffect(() => { fetchData(startDate, endDate); }, []);
 
   const cardValues: Record<string, string> = data ? {
-    total_invoices:   String(data.total_invoices),
+    total_invoices:   formatNumber(data.total_invoices),
     total_before_tax: fmt(data.total_before_tax),
     total_after_tax:  fmt(data.total_after_tax),
-    unique_clients:   String(data.unique_clients),
+    unique_clients:   formatNumber(data.unique_clients),
   } : { total_invoices: "—", total_before_tax: "—", total_after_tax: "—", unique_clients: "—" };
 
   const details = [

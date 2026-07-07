@@ -18,6 +18,7 @@ import { ConfirmModal } from "@/components/ConfirmModal";
 import { useCart } from "@/lib/cart-context";
 import { productsApi } from "@/services/products.service";
 import type { Product } from "@/components/inventory/ProductCard";
+import { formatCurrency, formatNumber } from "@/lib/format";
 
 export default function CartPage() {
   const {
@@ -181,7 +182,7 @@ export default function CartPage() {
                           {p.name}
                         </p>
                         <p className="text-[11px] text-gray-500">
-                          L {p.price.toFixed(2)} · Stock: {p.stock}
+                          {formatCurrency(p.price)} · Stock: {formatNumber(p.stock)}
                         </p>
                       </div>
                       <button
@@ -241,12 +242,12 @@ export default function CartPage() {
                             {item.product.name}
                           </p>
                           <p className="text-[11px] text-gray-500">
-                            L {item.unit_price.toFixed(2)} c/u
+                            {formatCurrency(item.unit_price)} c/u
                           </p>
                           {!item.has_stock && (
                             <p className="text-[11px] text-red-500 font-medium flex items-center gap-1 mt-0.5">
                               <AlertTriangle size={11} />
-                              Stock insuficiente ({item.available_stock} disp.)
+                              Stock insuficiente ({formatNumber(item.available_stock)} disp.)
                             </p>
                           )}
                         </div>
@@ -288,7 +289,7 @@ export default function CartPage() {
 
                         <div className="flex flex-col items-end gap-1 shrink-0 w-20">
                           <p className="font-semibold text-sm text-black">
-                            L {item.item_subtotal.toFixed(2)}
+                            {formatCurrency(item.item_subtotal)}
                           </p>
                           <button
                             onClick={() => handleRemove(item.productId)}
@@ -308,19 +309,19 @@ export default function CartPage() {
                     <div className="bg-[#F4B8D4]/40 rounded-2xl p-6 border-2 border-slate-900 space-y-2">
                       <div className="flex justify-between text-xs font-bold text-slate-900">
                         <span>Productos</span>
-                        <span>{summary.total_items}</span>
+                        <span>{formatNumber(summary.total_items)}</span>
                       </div>
                       <div className="flex justify-between text-xs font-bold text-slate-900">
                         <span>Subtotal</span>
-                        <span>L {summary.subtotal.toFixed(2)}</span>
+                        <span>{formatCurrency(summary.subtotal)}</span>
                       </div>
                       <div className="flex justify-between text-xs font-bold text-slate-900">
                         <span>ISV ({(summary.tax_rate * 100).toFixed(0)}%)</span>
-                        <span>L {summary.taxes.toFixed(2)}</span>
+                        <span>{formatCurrency(summary.taxes)}</span>
                       </div>
                       <div className="flex justify-between text-xl font-black text-slate-900 pt-2 border-t border-slate-900/10">
                         <span>TOTAL</span>
-                        <span>L {summary.total.toFixed(2)}</span>
+                        <span>{formatCurrency(summary.total)}</span>
                       </div>
                     </div>
                   )}

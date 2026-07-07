@@ -8,6 +8,7 @@ import { CaiRangeModal } from "@/components/cai/CaiRangeModal";
 import { CaiWarningModal } from "@/components/cai/CaiWarningModal";
 import { caiApi } from "@/services/cai.service";
 import { CAICode, CAIRange } from "@/lib/types/models";
+import { formatNumber } from "@/lib/format";
 
 export default function CaiManagementPage() {
   const [codes, setCodes] = useState<CAICode[]>([]);
@@ -171,8 +172,8 @@ export default function CaiManagementPage() {
 
   const columns = [
     { header: "Código CAI", render: (range: CAIRange) => <div className="flex items-center gap-2"><Code size={15} /> <span className="font-mono text-xs">{codes.find((c) => c.id === range.cai_id)?.cai_code ?? "—"}</span></div> },
-    { header: "Rango Inicial", render: (range: CAIRange) => range.range_start.toLocaleString() },
-    { header: "Rango Final", render: (range: CAIRange) => range.range_end.toLocaleString() },
+    { header: "Rango Inicial", render: (range: CAIRange) => formatNumber(range.range_start) },
+    { header: "Rango Final", render: (range: CAIRange) => formatNumber(range.range_end) },
     { header: "Expiración", render: (range: CAIRange) => range.expiration_date?.split('T')[0] ?? "—" },
     { header: "Estado", render: (range: CAIRange) => <span className={range.is_active ? "k-badge-admin" : "k-badge-employee"}>{range.is_active ? "Activo" : "Inactivo"}</span> },
     { header: "Acciones", render: (range: CAIRange) => <div className="flex justify-center"><button onClick={() => handleOpenEditRange(range)} className="koara-icon-btn"><Pencil size={14} /></button></div> },

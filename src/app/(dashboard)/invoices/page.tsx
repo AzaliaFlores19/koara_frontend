@@ -15,6 +15,8 @@ import { productsApi } from "@/services/products.service";
 import { clientsApi } from "@/services/clients.service";
 import { getAuth, isAdmin } from "@/lib/api/auth.api";
 import { useCart } from "@/lib/cart-context";
+import { formatCurrency } from "@/lib/format";
+import { AlertModal } from "@/components/AlertModal";
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -37,6 +39,18 @@ export default function InvoicesPage() {
   >([]);
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const { clear: clearCart } = useCart();
+
+  const [alertConfig, setAlertConfig] = useState<{
+    isOpen: boolean;
+    title?: string;
+    message: string;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+  const showAlert = (message: string, title?: string) =>
+    setAlertConfig({ isOpen: true, title, message });
 
   const fetchInvoices = async () => {
     try {
@@ -96,7 +110,7 @@ export default function InvoicesPage() {
   const handleConfirmInvoice = async (data: CreateInvoicePayload) => {
     const userId = getAuth()?.id;
     if (!userId) {
-      alert("Sesión no válida. Inicia sesión de nuevo.");
+      showAlert("Sesión no válida. Inicia sesión de nuevo.", "Sesión inválida");
       return;
     }
 
@@ -108,7 +122,7 @@ export default function InvoicesPage() {
       }));
 
     if (items.length === 0) {
-      alert("Agrega al menos un producto a la factura.");
+      showAlert("Agrega al menos un producto a la factura.", "Factura vacía");
       return;
     }
 
@@ -139,7 +153,7 @@ export default function InvoicesPage() {
       console.error("Error saving invoice:", err);
       const message =
         err?.response?.data?.message ?? "Error al guardar la factura.";
-      alert(Array.isArray(message) ? message.join("\n") : message);
+      showAlert(Array.isArray(message) ? message.join("\n") : message, "Error al guardar");
     } finally {
       setIsSubmitting(false);
     }
@@ -157,14 +171,14 @@ export default function InvoicesPage() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Error downloading invoice:", err);
-      alert("Error al descargar la factura.");
+      showAlert("Error al descargar la factura.", "Error de descarga");
     }
   };
 
   const handleDownloadPreview = async (data: CreateInvoicePayload) => {
     const userId = getAuth()?.id;
     if (!userId) {
-      alert("Sesión no válida. Inicia sesión de nuevo.");
+      showAlert("Sesión no válida. Inicia sesión de nuevo.", "Sesión inválida");
       return;
     }
     const items = (data.invoice_items ?? [])
@@ -174,7 +188,7 @@ export default function InvoicesPage() {
         quantity: item.quantity ?? 0,
       }));
     if (items.length === 0) {
-      alert("Agrega al menos un producto a la factura.");
+      showAlert("Agrega al menos un producto a la factura.", "Factura vacía");
       return;
     }
     try {
@@ -192,7 +206,7 @@ export default function InvoicesPage() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Error downloading preview:", err);
-      alert("Error al generar la vista previa.");
+      showAlert("Error al generar la vista previa.", "Error de vista previa");
     }
   };
 
@@ -258,7 +272,7 @@ export default function InvoicesPage() {
     {
       header: "Total en Ventas",
       render: (invoice: Invoice) => (
-        <span className="font-bold text-slate-900 text-sm">L {invoice.total?.toFixed(2) ?? "0.00"}</span>
+        <span className="font-bold text-slate-900 text-sm">{formatCurrency(invoice.total ?? 0)}</span>
       ),
     },
     {
@@ -352,6 +366,13 @@ export default function InvoicesPage() {
           }
           onDownloadPreview={handleDownloadPreview}
           isSubmitting={isSubmitting}
+        />
+
+        <AlertModal
+          isOpen={alertConfig.isOpen}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })}
         />
 
       </div>

@@ -17,6 +17,7 @@ import DashboardLayout from "@/components/layout/layout";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import Pagination from "@/components/inventory/Pagination";
 import { clientsApi, Client } from "@/services/clients.service";
+import { formatCurrency, formatNumber } from "@/lib/format";
 
 type ClientForm = {
   name: string;
@@ -243,13 +244,6 @@ export default function ClientsPage() {
   const clientToDelete = clients.find((client) => client.id === clientToDeleteId);
   const selectedHistoryClient = clients.find((client) => client.id === historyClientId);
   const selectedMostPurchasedClient = clients.find((client) => client.id === mostPurchasedClientId);
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("es-HN", {
-      style: "currency",
-      currency: "HNL",
-      minimumFractionDigits: 2,
-    }).format(value);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("es-HN");
@@ -640,7 +634,7 @@ export default function ClientsPage() {
                         <div>
                           <p className="font-black text-black">{item.product.name}</p>
                           <p className="text-sm font-medium text-slate-600">
-                            {item.total_quantity} unidades compradas
+                            {formatNumber(item.total_quantity)} unidades compradas
                           </p>
                         </div>
                       </div>

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, ImagePlus } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
+import { AlertModal } from "@/components/AlertModal";
 
 export interface ProductFormData {
   name: string;
@@ -67,6 +68,7 @@ export function ProductModal({
 }: ProductModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadErrorOpen, setIsUploadErrorOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -89,7 +91,7 @@ export function ProductModal({
       });
       setFormData({ ...formData, image: data.url });
     } catch {
-      alert("Error al subir la imagen. Intenta de nuevo.");
+      setIsUploadErrorOpen(true);
     } finally {
       setIsUploading(false);
     }
@@ -241,6 +243,13 @@ export function ProductModal({
           </div>
         </div>
       </div>
+
+      <AlertModal
+        isOpen={isUploadErrorOpen}
+        title="Error al subir imagen"
+        message="Error al subir la imagen. Intenta de nuevo."
+        onClose={() => setIsUploadErrorOpen(false)}
+      />
     </>
   );
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { formatNumber } from "@/lib/format"
 
 interface StatCardProps {
   title: string
@@ -24,7 +25,9 @@ export function StatCard({ title, value, icon, iconBg, variant = "pink", childre
         <span className={`flex h-11 w-11 items-center justify-center rounded-2xl ${iconBg || t.iconBg} text-foreground`}>
           {icon}
         </span>
-        <span className="text-4xl font-bold tracking-tight text-foreground">{value}</span>
+        <span className="text-4xl font-bold tracking-tight text-foreground">
+          {typeof value === "number" ? formatNumber(value) : value}
+        </span>
       </div>
       <p className="mt-4 text-sm font-semibold text-foreground">{title}</p>
       {children && <div className="mt-3 space-y-1.5 border-t border-black/10 pt-3">{children}</div>}

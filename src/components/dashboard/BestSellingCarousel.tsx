@@ -2,6 +2,7 @@
 
 import { useRef } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { formatNumber } from "@/lib/format"
 
 interface TopProduct {
   src: string
@@ -68,13 +69,13 @@ export function TopProducts({ products }: TopProductsProps) {
               {/* Sales Badge with Glassmorphism */}
               <div className="absolute bottom-4 left-4 right-4 z-20 translate-y-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                 <div className="rounded-2xl bg-white/90 px-4 py-2 text-center text-[11px] font-bold text-[#c06fa0] shadow-sm backdrop-blur-md ring-1 ring-white/50">
-                  {product.sales} unidades vendidas
+                  {formatNumber(product.sales)} unidades vendidas
                 </div>
               </div>
 
               {/* Simple persistent sales badge for non-hover mobile/desktop */}
               <div className="absolute bottom-4 right-4 z-10 rounded-xl bg-[#f9e7f0] px-2.5 py-1 text-[10px] font-bold text-[#c06fa0] group-hover:opacity-0 transition-opacity duration-200 shadow-sm">
-                {product.sales} vendidos
+                {formatNumber(product.sales)} vendidos
               </div>
 
               <img

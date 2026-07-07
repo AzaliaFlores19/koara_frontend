@@ -1,6 +1,7 @@
 "use client";
 
 import { Package, ShoppingCart, Loader2 } from "lucide-react";
+import { formatCurrency, formatNumber } from "@/lib/format";
 
 export interface Product {
   id: string;
@@ -42,8 +43,8 @@ export default function ProductCard({ product, onEdit, onDelete, onAddToCart, is
         <p className="text-[10px] text-black font-bold uppercase tracking-wide truncate">{product.code}</p>
         <h3 className="font-semibold text-xs text-black leading-tight mt-1 truncate">{product.name}</h3>
         <p className="text-[10px] text-gray-500 leading-snug line-clamp-1">{product.description}</p>
-        <p className="text-[10px] text-gray-500">Stock: {product.stock}</p>
-        <p className="font-semibold text-xs text-black">L {product.price.toFixed(2)}</p>
+        <p className="text-[10px] text-gray-500">Stock: {formatNumber(product.stock)}</p>
+        <p className="font-semibold text-xs text-black">{formatCurrency(product.price)}</p>
 
         <div className="flex gap-1.5 mt-1.5">
           {canEdit && (

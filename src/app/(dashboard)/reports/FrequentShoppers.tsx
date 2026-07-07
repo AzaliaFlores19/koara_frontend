@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ShoppingBag, Calendar, Wallet, CheckCircle } from "lucide-react";
 import { reportsApi, type FrequentCustomer } from "@/services/reports.service";
+import { formatCurrency, formatNumber } from "@/lib/format";
 
 const ROWS_PER_PAGE = 6;
 
@@ -10,10 +11,6 @@ function today() { return new Date().toISOString().split("T")[0]; }
 function firstOfMonth() {
   const d = new Date();
   return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split("T")[0];
-}
-
-function formatCurrency(n: number) {
-  return new Intl.NumberFormat("es-HN", { style: "currency", currency: "HNL", minimumFractionDigits: 2 }).format(n);
 }
 
 function formatDate(iso: string | null): string {
@@ -118,7 +115,7 @@ export default function FrequentShoppersTab() {
                   <div className="mt-3 space-y-1 text-sm text-slate-700">
                     <p className="flex items-center gap-2">
                       <ShoppingBag size={15} className="shrink-0 text-[#8C5E78]" />
-                      <span><span className="font-bold">{item.invoice_count}</span> compras realizadas</span>
+                      <span><span className="font-bold">{formatNumber(item.invoice_count)}</span> compras realizadas</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <Calendar size={15} className="shrink-0 text-[#8C5E78]" />

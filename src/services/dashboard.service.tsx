@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api/axios";
+import { formatCurrency } from "@/lib/format";
 
 export interface LowStockProduct {
   name: string;
@@ -117,9 +118,6 @@ export const dashboardService = {
       apiClient.get<InvoiceBackendResponse[]>("/invoices").then(res => res.data).catch(() => []),
       apiClient.get<BestSellingProduct[]>("/products/top-selling?limit=10").then(res => res.data).catch(() => [])
     ]);
-
-    const formatCurrency = (amount: number) => 
-      `L. ${amount.toLocaleString('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     const emitted = allInvoices ? allInvoices.length : 0;
     const paid = allInvoices ? allInvoices.filter((inv) => inv.status === 'PAID' || inv.status === 'PAGADA').length : 0;
