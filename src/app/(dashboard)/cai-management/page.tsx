@@ -174,6 +174,19 @@ export default function CaiManagementPage() {
     { header: "Código CAI", render: (range: CAIRange) => <div className="flex items-center gap-2"><Code size={15} /> <span className="font-mono text-xs">{codes.find((c) => c.id === range.cai_id)?.cai_code ?? "—"}</span></div> },
     { header: "Rango Inicial", render: (range: CAIRange) => formatNumber(range.range_start) },
     { header: "Rango Final", render: (range: CAIRange) => formatNumber(range.range_end) },
+    {
+      header: "Facturas Emitidas",
+      render: (range: CAIRange) => {
+        const total = range.range_end - range.range_start + 1;
+        const issued = Math.min(Math.max(range.current_invoice_number - range.range_start, 0), total);
+        return (
+          <div className="flex flex-col items-center gap-0.5">
+            <span className="font-semibold">{formatNumber(issued)}</span>
+            <span className="text-[10px] text-slate-400">de {formatNumber(total)}</span>
+          </div>
+        );
+      },
+    },
     { header: "Expiración", render: (range: CAIRange) => range.expiration_date?.split('T')[0] ?? "—" },
     { header: "Estado", render: (range: CAIRange) => <span className={range.is_active ? "k-badge-admin" : "k-badge-employee"}>{range.is_active ? "Activo" : "Inactivo"}</span> },
     { header: "Acciones", render: (range: CAIRange) => <div className="flex justify-center"><button onClick={() => handleOpenEditRange(range)} className="koara-icon-btn"><Pencil size={14} /></button></div> },
