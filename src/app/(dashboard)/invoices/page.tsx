@@ -140,7 +140,6 @@ export default function InvoicesPage() {
       }
 
       // Reflect the new invoice locally and clear the cart it came from.
-      setInvoices((prev) => [created, ...prev]);
       await clearCart().catch(() => undefined);
 
       // Show final view after creation

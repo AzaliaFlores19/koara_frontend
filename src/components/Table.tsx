@@ -96,7 +96,7 @@ export function Table<T extends { id: string | number }>({
     });
 
     if (hasAddition) {
-      setToastMessage("Se ha añadido de manera exitosa!");
+      setToastMessage("Se ha creado de manera exitosa!");
     } else if (hasEdit) {
       setToastMessage("Se ha editado de manera exitosa!");
     }
