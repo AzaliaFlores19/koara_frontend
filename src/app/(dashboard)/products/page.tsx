@@ -31,7 +31,7 @@ const EMPTY_FORM: ProductFormData = {
   image: "",
 };
 
-const PRODUCTS_PER_PAGE = 12;
+const PRODUCTS_PER_PAGE = 15;
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -102,7 +102,7 @@ export default function ProductsPage() {
       setProducts(result.data);
       setTotalProducts(result.total);
     } catch {
-      showToast("Error loading products.");
+      showToast("Error al cargar los productos.");
     } finally {
       setIsLoading(false);
     }
@@ -245,8 +245,17 @@ export default function ProductsPage() {
 
       handleCloseModal();
       await fetchProducts();
-    } catch {
-      showToast("Error al guardar el producto.");
+    } catch (err: any) {
+      const backendMessage = 
+        err?.response?.data?.message ?? 
+        err?.message ?? 
+        "Error al guardar el producto.";
+
+      const formattedMessage = Array.isArray(backendMessage)
+        ? backendMessage.join(", ")
+        : backendMessage;
+
+      showToast(formattedMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -340,7 +349,7 @@ export default function ProductsPage() {
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-lg border border-black/5 py-1 z-20">
+                <div className="absolute right-0 mt-2 w-44 max-h-64 overflow-y-auto bg-white rounded-2xl shadow-lg border border-black/5 py-1 z-20 scrollbar-thin scrollbar-thumb-gray-300">
                   <button
                     onClick={() => {
                       setActiveCategory(null);

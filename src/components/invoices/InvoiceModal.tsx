@@ -60,15 +60,17 @@ export function InvoiceModal({
   const isCartEmpty = (cart?.items?.length ?? 0) === 0;
   const [items, setItems] = useState<Partial<InvoiceItem>[]>(invoice?.invoice_items || []);
   const [customerId, setCustomerId] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("");
   const [localMode, setLocalMode] = useState<"create" | "view" | "preview">(mode);
+  const [isClientOpen, setIsClientOpen] = useState(false);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
   // Reset the modal whenever it (re)opens or the target invoice changes.
   useEffect(() => {
     if (!isOpen) return;
     setItems(invoice?.invoice_items || []);
     setCustomerId("");
-    setPaymentMethod("CASH");
+    setPaymentMethod("");
     setLocalMode(mode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, invoice, mode]);
@@ -272,7 +274,7 @@ export function InvoiceModal({
               onClick={() =>
                 onDownloadPreview?.({
                   customerId,
-                  payment_method: paymentMethod,
+                  payment_method: paymentMethod as PaymentMethod,
                   invoice_items: items as InvoiceItem[],
                 })
               }
@@ -282,7 +284,7 @@ export function InvoiceModal({
               Descargar
             </button>
             <button
-              onClick={() => onConfirm({ customerId, payment_method: paymentMethod, invoice_items: items as InvoiceItem[] })}
+              onClick={() => onConfirm({ customerId, payment_method: paymentMethod as PaymentMethod, invoice_items: items as InvoiceItem[] })}
               disabled={isSubmitting}
               className="koara-btn-pink py-4"
             >
@@ -306,21 +308,36 @@ export function InvoiceModal({
               Cliente
             </label>
             <div className="relative">
-              <select
-                value={customerId}
-                onChange={(e) => setCustomerId(e.target.value)}
-                className="w-full bg-white border-2 border-slate-900 rounded-xl px-4 py-2 font-bold text-sm outline-none appearance-none pr-10"
+              <button
+                type="button"
+                onClick={() => setIsClientOpen(!isClientOpen)}
+                className="w-full bg-white border-2 border-slate-900 rounded-xl px-4 py-2 font-bold text-sm text-left outline-none flex justify-between items-center"
               >
-                {clientOptions.length === 0 ? (
-                  <option value="">No hay clientes</option>
-                ) : (
-                  <option value="" disabled>Selecciona un cliente</option>
-                )}
-                {clientOptions.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                {clientOptions.find((c) => c.id === customerId)?.name || "Selecciona un cliente"}
+                <ChevronDown size={16} className={`transition-transform ${isClientOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isClientOpen && (
+                <div className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-white border-2 border-slate-900 rounded-xl shadow-xl py-1 scrollbar-thin scrollbar-thumb-gray-300">
+                  {clientOptions.length === 0 ? (
+                    <div className="px-4 py-2 text-sm text-slate-400 text-center">No hay clientes</div>
+                  ) : (
+                    clientOptions.map((c) => (
+                      <div
+                        key={c.id}
+                        onClick={() => {
+                          setCustomerId(c.id);
+                          setIsClientOpen(false);
+                        }}
+                        className={`px-4 py-2 text-sm cursor-pointer transition-colors ${
+                          customerId === c.id ? "bg-koara-primary font-bold" : "hover:bg-gray-100"
+                        }`}
+                      >
+                        {c.name}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <div className="space-y-1">
@@ -328,16 +345,32 @@ export function InvoiceModal({
               Método de Pago
             </label>
             <div className="relative">
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                className="w-full bg-white border-2 border-slate-900 rounded-xl px-4 py-2 font-bold text-sm outline-none appearance-none pr-10"
+              <button
+                type="button"
+                onClick={() => setIsPaymentOpen(!isPaymentOpen)}
+                className="w-full bg-white border-2 border-slate-900 rounded-xl px-4 py-2 font-bold text-sm text-left outline-none flex justify-between items-center"
               >
-                {PAYMENT_METHODS.map((m) => (
-                  <option key={m.value} value={m.value}>{m.label}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                {PAYMENT_METHODS.find((m) => m.value === paymentMethod)?.label || "Selecciona un método de pago"}
+                <ChevronDown size={16} className={`transition-transform ${isPaymentOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isPaymentOpen && (
+                <div className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-white border-2 border-slate-900 rounded-xl shadow-xl py-1 scrollbar-thin scrollbar-thumb-gray-300">
+                  {PAYMENT_METHODS.map((m) => (
+                    <div
+                      key={m.value}
+                      onClick={() => {
+                        setPaymentMethod(m.value);
+                        setIsPaymentOpen(false);
+                      }}
+                      className={`px-4 py-2 text-sm cursor-pointer transition-colors ${
+                        paymentMethod === m.value ? "bg-koara-primary font-bold" : "hover:bg-gray-100"
+                      }`}
+                    >
+                      {m.label}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -382,7 +415,7 @@ export function InvoiceModal({
           </button>
           <button
             onClick={() => setLocalMode("preview")}
-            disabled={isSubmitting || isCartEmpty || !customerId}
+            disabled={isSubmitting || isCartEmpty || !customerId || !paymentMethod}
             className="koara-btn-pink py-4"
           >
             {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : "Siguiente"}

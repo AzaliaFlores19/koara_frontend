@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, ImagePlus } from "lucide-react";
+import { Loader2, ImagePlus, ChevronDown } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import { AlertModal } from "@/components/AlertModal";
 
@@ -69,6 +69,7 @@ export function ProductModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadErrorOpen, setIsUploadErrorOpen] = useState(false);
+  const [isCatOpen, setIsCatOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -216,19 +217,34 @@ export function ProductModal({
                 />
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 relative">
                 <label className="text-xs font-bold text-black uppercase tracking-wider">Categoría</label>
-                <select
-                  required
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="koara-input-field"
+                <button
+                  type="button"
+                  onClick={() => setIsCatOpen(!isCatOpen)}
+                  className="w-full bg-white border-2 border-slate-900 rounded-xl px-4 py-2 font-bold text-sm text-left outline-none flex justify-between items-center"
                 >
-                  <option value="" disabled>Selecciona una categoría</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+                  {formData.category || "Selecciona una categoría"}
+                  <ChevronDown size={16} className={`transition-transform ${isCatOpen ? "rotate-180" : ""}`} />
+                </button>
+                {isCatOpen && (
+                  <div className="absolute z-50 w-full bottom-full mb-1 max-h-60 overflow-y-auto bg-white border-2 border-slate-900 rounded-xl shadow-xl py-1 scrollbar-thin scrollbar-thumb-gray-300">
+                    {categories.map((cat) => (
+                      <div
+                        key={cat}
+                        onClick={() => {
+                          setFormData({ ...formData, category: cat });
+                          setIsCatOpen(false);
+                        }}
+                        className={`px-4 py-2 text-sm cursor-pointer transition-colors ${
+                          formData.category === cat ? "bg-koara-primary font-bold" : "hover:bg-gray-100"
+                        }`}
+                      >
+                        {cat}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-4 pt-2">
