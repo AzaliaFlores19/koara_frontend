@@ -83,6 +83,6 @@ src/
 └── styles/         # Estilos globales
 ```
 
-## Proyectos relacionados
+## Proyectos Relacionados
 
 - **Backend:** [AzaliaFlores19/Koara_backend](https://github.com/AzaliaFlores19/Koara_backend)
